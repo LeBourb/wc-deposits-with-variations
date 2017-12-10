@@ -5,14 +5,10 @@
  * Description: Mark items as deposit items which customers can then place deposits on, rather than paying in full.
  * Version: 1.2.0
  * Forked from: 1.1.4
- * Author: WooThemes
- * Author URI: http://woothemes.com/
+ * Author: LeBourg
+ * Author URI: 
  * Text Domain: woocommerce-deposits
  * Domain Path: /languages
- *
- * 		Copyright: © 2009-2016 WooThemes.
- *  	License: GNU General Public License v3.0
- *   	License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
