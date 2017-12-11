@@ -6,9 +6,13 @@
  * Version: 1.2.0
  * Forked from: 1.1.4
  * Author: LeBourg
- * Author URI: 
+ * Author URI: http://woothemes.com/
  * Text Domain: woocommerce-deposits
  * Domain Path: /languages
+ *
+ * 		Copyright: © 2009-2016 WooThemes.
+ *  	License: GNU General Public License v3.0
+ *   	License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

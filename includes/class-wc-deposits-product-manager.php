@@ -154,14 +154,16 @@ class WC_Deposits_Product_Manager {
 		if ( is_numeric( $product ) ) {
 			$product = wc_get_product( $product );
 		}
-		
-		$item_id = ( $product->variation_id ) ? $product->variation_id : $product->id;
+		$variation_id = $product->get_id();
+		$item_id = ( $variation_id ) ? $variation_id : $product->get_id();
 		
 		$type       = self::get_deposit_type( $item_id );
 		$percentage = false;
 
 		if ( in_array( $type, array( 'fixed', 'percent' ) ) ) {
+                    
 			$amount = get_post_meta( $item_id, '_wc_deposit_amount', true );
+
 
 			if ( ! $amount ) {
 				$amount = get_option( 'wc_deposits_default_amount' );
@@ -175,6 +177,7 @@ class WC_Deposits_Product_Manager {
 				$percentage = true;
 			}
 		} else {
+                    
 			if ( ! $plan_id ) {
 				return false;
 			}
@@ -192,8 +195,8 @@ class WC_Deposits_Product_Manager {
 		}
 
 		if ( 'display' === $context ) {
-			$tax_display_mode = get_option( 'woocommerce_tax_display_shop' );
-			$price            = $tax_display_mode == 'incl' ? $product->get_price_including_tax( 1, $amount ) : $product->get_price_excluding_tax( 1, $amount );
+			$tax_display_mode = get_option( 'woocommerce_tax_display_shop' );                                   
+                        $price            = $tax_display_mode == 'incl' ? wc_get_price_excluding_tax( $product, array('qty' => 1,'price' => $amount)) : wc_get_price_excluding_tax( $product, array('qty'   => 1,'price' => $amount) );			
 		} else {
 			$price            = $amount;
 		}

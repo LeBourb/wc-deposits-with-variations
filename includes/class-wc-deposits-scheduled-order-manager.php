@@ -90,7 +90,7 @@ class WC_Deposits_Scheduled_Order_Manager {
 	private static function _get_normalized_price_before_plan( $plan, $item ) {
 		$price_after_plan = ! empty( $item['price_excluding_tax'] ) 
 			? $item['price_excluding_tax'] 
-			: $item['product']->get_price_excluding_tax( $item['qty'] );
+			: wc_get_price_excluding_tax( $item['product'], array('qty' => $item['qty'],'price' => $item['full_amount'])  );                
 
 		if ( 'percentage' === $plan->get_type() ) {
 			$total_percent    = $plan->get_total_percent();

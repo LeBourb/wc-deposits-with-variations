@@ -57,7 +57,8 @@ class WC_Deposits_Cart_Manager {
 	 * Show deposits form
 	 */
 	public function deposits_form_output() {
-		if ( WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) ) {
+		
+                if ( WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) ) {
 			wp_enqueue_script( 'wc-deposits-frontend' );
 			wc_get_template( 'deposit-form.php', array( 'post' => $GLOBALS['post'] ), 'woocommerce-deposits', WC_DEPOSITS_TEMPLATE_PATH );
 		}
@@ -95,11 +96,10 @@ class WC_Deposits_Cart_Manager {
 			if ( ! empty( $cart_item['is_deposit'] ) && empty( $cart_item['payment_plan'] ) ) {
 				$_product = $cart_item['data'];
 				$quantity = $cart_item['quantity'];
-
 				if ( 'excl' === WC()->cart->tax_display_cart ) {
-					$credit_amount += $_product->get_price_excluding_tax( $quantity, $cart_item['full_amount'] - $cart_item['deposit_amount'] );
+                                        $credit_amount += wc_get_price_excluding_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['full_amount'] - $cart_item['deposit_amount']) );					
 				} else {
-					$credit_amount += $_product->get_price_including_tax( $quantity, $cart_item['full_amount'] - $cart_item['deposit_amount'] );
+                                        $credit_amount += wc_get_price_including_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['full_amount'] - $cart_item['deposit_amount']) );					
 				}
 			}
 		}
@@ -119,10 +119,10 @@ class WC_Deposits_Cart_Manager {
 				$_product = $cart_item['data'];
 				$quantity = $cart_item['quantity'];
 
-				if ( 'excl' === WC()->cart->tax_display_cart ) {
-					$credit_amount += $_product->get_price_excluding_tax( $quantity, $cart_item['full_amount'] - $cart_item['deposit_amount'] );
+				if ( 'excl' === WC()->cart->tax_display_cart ) {					
+                                    $credit_amount += wc_get_price_excluding_tax( $_product,array('qty' => $quantity,'price' =>  $cart_item['full_amount'] - $cart_item['deposit_amount']));
 				} else {
-					$credit_amount += $_product->get_price_including_tax( $quantity, $cart_item['full_amount'] - $cart_item['deposit_amount'] );
+                                    $credit_amount += wc_get_price_including_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['full_amount'] - $cart_item['deposit_amount']));
 				}
 			}
 		}
@@ -138,11 +138,11 @@ class WC_Deposits_Cart_Manager {
 	 * @param mixed $qty
 	 * @return bool
 	 */
-	public function validate_add_cart_item( $passed, $product_id, $qty, $variation_id ) {
+	public function validate_add_cart_item( $passed, $product_id, $qty, $variation_id = null ) {
 		if ( ! WC_Deposits_Product_Manager::deposits_enabled( $product_id ) ) {
 			return $passed;
 		}
-
+                
 		$wc_deposit_option       = isset( $_POST['wc_deposit_option'] ) ? sanitize_text_field( $_POST['wc_deposit_option'] ) : false;
 		$wc_deposit_payment_plan = isset( $_POST['wc_deposit_payment_plan'] ) ? sanitize_text_field( $_POST['wc_deposit_payment_plan'] ) : false;
 
@@ -179,6 +179,8 @@ class WC_Deposits_Cart_Manager {
 
 		$wc_deposit_option       = isset( $_POST['wc_deposit_option'] ) ? sanitize_text_field( $_POST['wc_deposit_option'] ) : false;
 		$wc_deposit_payment_plan = isset( $_POST['wc_deposit_payment_plan'] ) ? sanitize_text_field( $_POST['wc_deposit_payment_plan'] ) : false;
+                
+                
 
 		if ( 'yes' === $wc_deposit_option || WC_Deposits_Product_Manager::deposits_forced( $item_id ) ) {
 			$cart_item_meta['is_deposit'] = true;
@@ -213,9 +215,10 @@ class WC_Deposits_Cart_Manager {
 	 */
 	public function add_cart_item( $cart_item ) {
 		if ( ! empty( $cart_item['is_deposit'] ) ) {
+                        
 			$deposit_amount = WC_Deposits_Product_Manager::get_deposit_amount( $cart_item['data'], ! empty( $cart_item['payment_plan'] ) ? $cart_item['payment_plan'] : 0 );
-
 			if ( false !== $deposit_amount ) {
+                            
 				$cart_item['deposit_amount'] = $deposit_amount;
 
 				// Bookings support
@@ -263,12 +266,12 @@ class WC_Deposits_Cart_Manager {
 	 * Show the correct item price
 	 */
 	public function display_item_price( $output, $cart_item, $cart_item_key ) {
-		if ( ! empty( $cart_item['is_deposit'] ) ) {
+		if ( ! empty( $cart_item['is_deposit'] ) ) {                        
 			$_product = $cart_item['data'];
 			if ( 'excl' === WC()->cart->tax_display_cart ) {
-				$amount = $_product->get_price_excluding_tax( 1, $cart_item['full_amount'] );
+                            $amount = wc_get_price_excluding_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount']));                            
 			} else {
-				$amount = $_product->get_price_including_tax( 1, $cart_item['full_amount'] );
+                            $amount = wc_get_price_including_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount']));
 			}
 			$output = wc_price( $amount );
 		}
@@ -284,11 +287,11 @@ class WC_Deposits_Cart_Manager {
 			$quantity = $cart_item['quantity'];
 
 			if ( 'excl' === WC()->cart->tax_display_cart ) {
-				$full_amount    = $_product->get_price_excluding_tax( $quantity, $cart_item['full_amount'] );
-				$deposit_amount = $_product->get_price_excluding_tax( $quantity, $cart_item['deposit_amount'] );
+                                $full_amount = wc_get_price_excluding_tax( $_product, $quantity, $cart_item['full_amount']);
+                                $deposit_amount = wc_get_price_excluding_tax( $_product, $quantity, $cart_item['deposit_amount']);
 			} else {
-				$full_amount    = $_product->get_price_including_tax( $quantity, $cart_item['full_amount'] );
-				$deposit_amount = $_product->get_price_including_tax( $quantity, $cart_item['deposit_amount'] );
+				$full_amount = wc_get_price_including_tax( $_product, $quantity, $cart_item['full_amount']);
+                                $deposit_amount = wc_get_price_including_tax( $_product, $quantity, $cart_item['deposit_amount']);
 			}
 
 			if ( ! empty( $cart_item['payment_plan'] ) ) {
@@ -371,16 +374,16 @@ class WC_Deposits_Cart_Manager {
 	public function add_to_cart_text( $text ) {
 		global $product;
 
-		if ( is_single( $product->id ) ) {
+		if ( is_single( $product->get_id() ) ) {
 			return $text;
 		}
 
-		if ( ! WC_Deposits_Product_Manager::deposits_enabled( $product->id ) ) {
+		if ( ! WC_Deposits_Product_Manager::deposits_enabled( $product->get_id() ) ) {
 			return $text;
 		}
 
-		$deposit_type = WC_Deposits_Product_Manager::get_deposit_type( $product->id );
-		if ( WC_Deposits_Product_Manager::deposits_forced( $product->id ) ) {
+		$deposit_type = WC_Deposits_Product_Manager::get_deposit_type( $product->get_id() );
+		if ( WC_Deposits_Product_Manager::deposits_forced( $product->get_id() ) ) {
 			if ( 'plan' !== $deposit_type ) {
 				return $text;
 			}
@@ -396,23 +399,23 @@ class WC_Deposits_Cart_Manager {
 	public function add_to_cart_url( $url ) {
 		global $product;
 
-		if ( is_single( $product->id ) ) {
+		if ( is_single( $product->get_id() ) ) {
 			return $url;
 		}
 
-		if ( ! WC_Deposits_Product_Manager::deposits_enabled( $product->id ) ) {
+		if ( ! WC_Deposits_Product_Manager::deposits_enabled( $product->get_id() ) ) {
 			return $url;
 		}
 
-		$deposit_type = WC_Deposits_Product_Manager::get_deposit_type( $product->id );
-		if ( WC_Deposits_Product_Manager::deposits_forced( $product->id ) ) {
+		$deposit_type = WC_Deposits_Product_Manager::get_deposit_type( $product->get_id() );
+		if ( WC_Deposits_Product_Manager::deposits_forced( $product->get_id() ) ) {
 			if ( 'plan' !== $deposit_type ) {
 				return $url;
 			}
 		}
 
 		$product->product_type = 'deposit';
-		$url = apply_filters( 'woocoommerce_deposits_add_to_cart_url', get_permalink( $product->id ) );
+		$url = apply_filters( 'woocoommerce_deposits_add_to_cart_url', get_permalink( $product->get_id() ) );
 		return $url;
 	}
 
