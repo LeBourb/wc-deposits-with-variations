@@ -97,6 +97,9 @@ if ( is_woocommerce_active() ) {
 			include_once( 'includes/class-wc-deposits-scheduled-order-manager.php' );
 			include_once( 'includes/class-wc-deposits-product-manager.php' );
 			include_once( 'includes/class-wc-deposits-plan.php' );
+                        
+                        include_once( 'includes/admin/wc-admin-order-item-remainder-invoice.php' );
+                        
 		}
 
 		/**

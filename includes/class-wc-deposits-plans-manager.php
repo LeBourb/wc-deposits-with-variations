@@ -125,7 +125,9 @@ class WC_Deposits_Plans_Manager {
 				'post_parent' => $product_id, 
 				'post_type' => 'product_variation',
 			) );
-			
+                        print('***************');
+			print_r($children);
+                        print('***************');
 			foreach ( $children as $child ) {
 				$child_plans = self::get_plans_for_product( $child->ID );
 				foreach ( $child_plans as $child_plan ) {

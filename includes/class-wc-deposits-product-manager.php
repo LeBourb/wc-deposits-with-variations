@@ -57,6 +57,7 @@ class WC_Deposits_Product_Manager {
 	 */
 	public static function deposits_forced( $product_id ) {
 		$setting = get_post_meta( $product_id, '_wc_deposit_enabled', true );
+                
 		if ( empty( $setting ) ) {
 			$setting = get_option( 'wc_deposits_default_enabled', 'no' );
 		}
@@ -69,7 +70,9 @@ class WC_Deposits_Product_Manager {
 	 * @return string
 	 */
 	public static function get_deposit_type( $product_id ) {
+                
 		$setting = get_post_meta( $product_id, '_wc_deposit_type', true );
+                //print_r($setting);
 		if ( ! $setting ) {
 			$setting = get_option( 'wc_deposits_default_type', 'percent' );
 		}
@@ -113,7 +116,7 @@ class WC_Deposits_Product_Manager {
 	 */
 	public static function get_formatted_deposit_amount( $product_id ) {
 		$product = wc_get_product( $product_id );
-
+                //print(self::get_deposit_amount_for_display( $product ));
 		if ( $amount = self::get_deposit_amount_for_display( $product ) ) {
 			$type   = self::get_deposit_type( $product_id );
 
@@ -139,7 +142,7 @@ class WC_Deposits_Product_Manager {
 	 * @return float|bool
 	 */
 	public static function get_deposit_amount_for_display( $product, $plan_id = 0 ) {
-		self::get_deposit_amount( $product, $plan_id );
+            return self::get_deposit_amount( $product, $plan_id );
 	}
 
 	/**
@@ -155,15 +158,16 @@ class WC_Deposits_Product_Manager {
 			$product = wc_get_product( $product );
 		}
 		$variation_id = $product->get_id();
-		$item_id = ( $variation_id ) ? $variation_id : $product->get_id();
-		
+                //$variation_id = $product->id;
+                $item_id = ( $variation_id ) ? $variation_id : $product->get_id();
+		//print_r($product->id);
 		$type       = self::get_deposit_type( $item_id );
 		$percentage = false;
-
+                //print_r($type);
 		if ( in_array( $type, array( 'fixed', 'percent' ) ) ) {
                     
 			$amount = get_post_meta( $item_id, '_wc_deposit_amount', true );
-
+                        
 
 			if ( ! $amount ) {
 				$amount = get_option( 'wc_deposits_default_amount' );
@@ -200,7 +204,7 @@ class WC_Deposits_Product_Manager {
 		} else {
 			$price            = $amount;
 		}
-
+                
 		return wc_format_decimal( $price );
 	}
 }

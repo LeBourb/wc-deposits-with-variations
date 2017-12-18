@@ -19,16 +19,17 @@ jQuery(function($){
 			}
 		})
 		.trigger( 'init' );
-	
-	$('form.variations_form')
+	if($('form.variations_form').length > 0) {
+            $('form.variations_form')
 		.ready(function(){
-			$wrapper.hide();
+                        
+			//$wrapper.hide();
 			$plans.filter('.product_variation').hide();
 			$(this).find('input.variation_id').change();
 		})
 		.on( 'change', 'input.variation_id', function(){
 			var value = $(this).val(),
-				$matches = $plans.filter('.item-'+value);
+			$matches = $plans.filter('.item-'+value);
 			console.log( value );
 			if ( '' !== value ) {
 				$plans.filter('.product_variation').hide();
@@ -40,5 +41,7 @@ jQuery(function($){
 				$wrapper.slideUp();
 			}
 		});
+        }
+        
 
 });

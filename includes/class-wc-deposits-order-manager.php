@@ -123,8 +123,10 @@ class WC_Deposits_Order_Manager {
 	 * hide scheduled orders from account [age]
 	 * @param  array $query
 	 */
-	public function woocommerce_my_account_my_orders_query( $query ) {
-		$query['post_status'] = array_diff( $query['post_status'], array( 'wc-scheduled-payment' ) );
+	public function woocommerce_my_account_my_orders_query( $query ) {                
+		if(array_key_exists('post_status',$query)) {
+                    $query['post_status'] = array_diff( $query['post_status'], array( 'wc-scheduled-payment' ) );
+                } 
 		return $query;
 	}
 
@@ -224,14 +226,14 @@ class WC_Deposits_Order_Manager {
 
 			// Set future date and parent
 			$new_order_post = array(
-				'ID'          => $new_order->id,
+				'ID'          => $new_order->get_id(),
 				'post_date'   => date( 'Y-m-d H:i:s', $payment_date ),
 				'post_parent' => $original_order_id
 			);
 			wp_update_post( $new_order_post );
 
-			do_action( 'woocommerce_deposits_create_order', $new_order->id );
-			return $new_order->id;
+			do_action( 'woocommerce_deposits_create_order', $new_order->get_id() );
+			return $new_order->get_id();
 		}
 	}
 
@@ -465,7 +467,7 @@ class WC_Deposits_Order_Manager {
 			}
 
 			// PAID scheduled orders
-			$related_orders = WC_Deposits_Scheduled_Order_Manager::get_related_orders( $order->id );
+			$related_orders = WC_Deposits_Scheduled_Order_Manager::get_related_orders( $order->get_id() );
 
 			foreach ( $related_orders as $related_order_id ) {
 				$related_order = wc_get_order( $related_order_id );
