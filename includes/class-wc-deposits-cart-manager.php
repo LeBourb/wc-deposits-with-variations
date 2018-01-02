@@ -397,8 +397,8 @@ class WC_Deposits_Cart_Manager {
 	public function add_order_item_meta( $item_id, $cart_item ) {
 		if ( ! empty( $cart_item['is_deposit'] ) ) {
 			woocommerce_add_order_item_meta( $item_id, '_is_deposit', 'yes' );
-			woocommerce_add_order_item_meta( $item_id, '_deposit_full_amount', $cart_item['data']->get_price_including_tax( $cart_item['quantity'], $cart_item['full_amount'] ) );
-			woocommerce_add_order_item_meta( $item_id, '_deposit_full_amount_ex_tax', $cart_item['data']->get_price_excluding_tax( $cart_item['quantity'], $cart_item['full_amount'] ) );
+			woocommerce_add_order_item_meta( $item_id, '_deposit_full_amount', $cart_item['data']->get_price_including_tax( $cart_item['quantity'], $cart_item['deposit_amount'] ) );
+			woocommerce_add_order_item_meta( $item_id, '_deposit_full_amount_ex_tax', $cart_item['data']->get_price_excluding_tax( $cart_item['quantity'], $cart_item['deposit_amount'] ) );
 
 			if ( ! empty( $cart_item['payment_plan'] ) ) {
 				woocommerce_add_order_item_meta( $item_id, '_payment_plan', $cart_item['payment_plan'] );

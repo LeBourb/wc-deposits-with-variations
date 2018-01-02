@@ -451,20 +451,27 @@ class WC_Deposits_Order_Manager {
 	 * @return array
 	 */
 	public function woocommerce_get_order_item_totals( $total_rows, $order ) {
+            
 		if ( $this->has_deposit( $order ) ) {
+                   
 			$remaining = 0;
 			$paid      = 0;
-
 			foreach( $order->get_items() as $item ) {
 				if ( WC_Deposits_Order_Item_Manager::is_deposit( $item ) ) {
+                                     
 					if ( ! WC_Deposits_Order_Item_Manager::get_payment_plan( $item ) ) {
+                                            // R14: create a new invoice
+                                            
 						$remaining_balance_order_id = ! empty( $item['remaining_balance_order_id'] ) ? absint( $item['remaining_balance_order_id'] ) : 0;
 						$remaining_balance_paid     = ! empty( $item['remaining_balance_paid'] );
 						if ( empty( $remaining_balance_order_id ) && ! $remaining_balance_paid ) {
 							$remaining += $item['deposit_full_amount'] - ( $order->get_line_subtotal( $item, true ) + $item['line_tax'] );
 						}
+                                                $paid += $item['deposit_full_amount'];
 					}
-				}
+				}else {
+                                    $paid += $item['full_amount'];
+                                }
 			}
 
 			// PAID scheduled orders
@@ -478,18 +485,26 @@ class WC_Deposits_Order_Manager {
 					$remaining += $related_order->get_total();
 				}
 			}
-
-			if ( $remaining && $paid ) {
+                        $remaining  =   $order->get_subtotal() + $order->get_shipping_total() - $paid;
+			/*if ( $remaining && $paid ) {
+                            	$total_rows['paid'] = array(
+					'label' => __( 'Paid', 'woocommerce-deposits' ),
+					'value'	=> '<del>' . wc_price( $paid ) . '</del> <ins>' . wc_price( $remaining ) . '</ins>'
+				);
 				$total_rows['future'] = array(
 					'label' => __( 'Future&nbsp;Payments&nbsp;', 'woocommerce-deposits' ),
 					'value'	=> '<del>' . wc_price( $remaining + $paid ) . '</del> <ins>' . wc_price( $remaining ) . '</ins>'
 				);
-			} elseif ( $remaining ) {
+			} elseif ( $remaining ) {*/
+                                $total_rows['paid'] = array(
+					'label' => __( 'Paid', 'woocommerce-deposits' ),
+					'value'	=> wc_price( $paid )
+				);
 				$total_rows['future'] = array(
 					'label' => __( 'Future&nbsp;Payments&nbsp;', 'woocommerce-deposits' ),
 					'value'	=> wc_price( $remaining )
 				);
-			}
+			//}
 		}
 		return $total_rows;
 	}
