@@ -37,7 +37,9 @@ class WC_Deposits_Cart_Manager {
 		add_action( 'woocommerce_review_order_after_order_total', array( $this, 'display_cart_totals_after' ), 1 );
 		add_action( 'woocommerce_add_order_item_meta', array( $this, 'add_order_item_meta' ), 50, 2 );
 		add_filter( 'woocommerce_available_payment_gateways', array( $this, 'disable_gateways' ) );
-
+                
+                add_filter( 'woocommerce_cart_subtotal', array( $this, 'cart_subtotal'), 10, 3 ); 
+                
 		// Change button/cart URLs
 		add_filter( 'add_to_cart_text', array( $this, 'add_to_cart_text'), 15 );
 		add_filter( 'woocommerce_product_add_to_cart_text', array( $this, 'add_to_cart_text'), 15 );
@@ -57,8 +59,7 @@ class WC_Deposits_Cart_Manager {
 	 * Show deposits form
 	 */
 	public function deposits_form_output() {
-		
-                if ( WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) ) {
+                if ( WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) ) {                    
 			wp_enqueue_script( 'wc-deposits-frontend' );
 			wc_get_template( 'deposit-form.php', array( 'post' => $GLOBALS['post'] ), 'woocommerce-deposits', WC_DEPOSITS_TEMPLATE_PATH );
 		}
@@ -82,7 +83,36 @@ class WC_Deposits_Cart_Manager {
 	 * @return float
 	 */
 	public function get_future_payments_amount() {
-		return $this->get_deposit_remaining_amount() + $this->get_credit_amount();
+           //WC()->cart->calculate_shipping( );
+	 //echo 'int val: ' . intval(WC()->cart->shipping_total);	
+            return $this->get_deposit_remaining_amount() + $this->get_credit_amount() + WC()->cart->shipping_total;
+	}
+        
+        public function get_due_today_amount() {
+		$due_today_amount = 0;
+                
+		foreach ( WC()->cart->get_cart() as $cart_item ) {                    
+			if ( ! empty( $cart_item['is_deposit'] ) && empty( $cart_item['payment_plan'] ) ) {
+				$_product = $cart_item['data'];
+				$quantity = $cart_item['quantity'];
+				if ( 'excl' === WC()->cart->tax_display_cart ) {
+                                        $due_today_amount += wc_get_price_excluding_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['deposit_amount']) );					
+				} else {
+                                        $due_today_amount += wc_get_price_including_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['deposit_amount']) );					
+				}
+			}else {
+                            $_product = $cart_item['data'];
+				$quantity = $cart_item['quantity'];
+                            if ( 'excl' === WC()->cart->tax_display_cart ) {
+                                    $due_today_amount += wc_get_price_excluding_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['line_total']) );					
+                            } else {
+                                    $due_today_amount += wc_get_price_including_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['line_total']) );					
+                            }
+                            
+                        }
+		}
+
+		return $due_today_amount;
 	}
 
 	/**
@@ -194,6 +224,17 @@ class WC_Deposits_Cart_Manager {
 
 		return $cart_item_meta;
 	}
+        
+        // define the woocommerce_cart_subtotal callback 
+        public function cart_subtotal( $array,  $compound,  $instance  ) { 
+            // make filter magic happen here... 
+           
+            //$_product   = apply_filters( 'woocommerce_cart_item_product', $cart_item['data'] );
+            //WC()->cart->get_product_subtotal( $_product, $cart_item['quantity'] );
+           //print_r($instance);
+            return $array; 
+        } 
+
 
 	/**
 	 * Get data from the session and add to the cart item's meta
@@ -235,9 +276,12 @@ class WC_Deposits_Cart_Manager {
 						: $cart_item['data']->get_price();
 				} else {
 					$cart_item['full_amount'] = $cart_item['data']->get_price();
+                                        $cart_item['deposit_full_amount'] = $deposit_amount * $cart_item['quantity'];
 				}
 
-				$cart_item['data']->set_price( $cart_item['deposit_amount'] );
+				//$cart_item['data']->set_price( $cart_item['deposit_amount'] );
+                                //R14: do not change item price
+                                
 			}
 		}
 		return $cart_item;
@@ -269,11 +313,15 @@ class WC_Deposits_Cart_Manager {
 		if ( ! empty( $cart_item['is_deposit'] ) ) {                        
 			$_product = $cart_item['data'];
 			if ( 'excl' === WC()->cart->tax_display_cart ) {
-                            $amount = wc_get_price_excluding_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount']));                            
+                            //$amount = wc_get_price_excluding_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount'])); 
+                            $output .= '<br/><small>' . sprintf( __( '%s deposit', 'woocommerce-deposits' ), wc_price( $cart_item['deposit_amount'] ) ) . '</small>';
+                            
 			} else {
-                            $amount = wc_get_price_including_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount']));
+                            //$amount = wc_get_price_including_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount']));
+                            $output .= '<br/><small>' . sprintf( __( '%s deposit', 'woocommerce-deposits' ), wc_price( $cart_item['deposit_amount'] ) ) . '</small>';
+                            
 			}
-			$output = wc_price( $amount );
+                        //$output = 'toto' . wc_price( $amount );
 		}
 		return $output;
 	}
@@ -285,20 +333,23 @@ class WC_Deposits_Cart_Manager {
 		if ( ! empty( $cart_item['is_deposit'] ) ) {
 			$_product = $cart_item['data'];
 			$quantity = $cart_item['quantity'];
-
-			if ( 'excl' === WC()->cart->tax_display_cart ) {
+                        
+			/*if ( 'excl' === WC()->cart->tax_display_cart ) {
                                 $full_amount = wc_get_price_excluding_tax( $_product, $quantity, $cart_item['full_amount']);
                                 $deposit_amount = wc_get_price_excluding_tax( $_product, $quantity, $cart_item['deposit_amount']);
 			} else {
-				$full_amount = wc_get_price_including_tax( $_product, $quantity, $cart_item['full_amount']);
+				$fullamount = wc_get_price_including_tax( $_product, $quantity, $cart_item['full_amount']);
                                 $deposit_amount = wc_get_price_including_tax( $_product, $quantity, $cart_item['deposit_amount']);
-			}
-
+			}*/
+                        //$deposit_full_amount = $quantity * $cart_item['deposit_amount'];
+                        $deposit_amount = $quantity * $cart_item['deposit_amount'];
+                        //$cart_item['line_subtotal'] = $full_amount;
+                        
 			if ( ! empty( $cart_item['payment_plan'] ) ) {
 				$plan = new WC_Deposits_Plan( $cart_item['payment_plan'] );
-				$output .= '<br/><small>' . $plan->get_formatted_schedule( $full_amount ) . '</small>';
+				$output .= '<br/><small>' . $plan->get_formatted_schedule( $deposit_full_amount ) . '</small>';
 			} else {
-				$output .= '<br/><small>' . sprintf( __( '%s payable in total', 'woocommerce-deposits' ), wc_price( $full_amount ) ) . '</small>';
+				$output .= '<br/><small>' . sprintf( __( '%s payable today', 'woocommerce-deposits' ), wc_price( $deposit_amount ) ) . '</small>';
 			}
 		}
 		return $output;
@@ -307,8 +358,8 @@ class WC_Deposits_Cart_Manager {
 	/**
 	 * Before the main total
 	 */
-	public function display_cart_totals_before() {
-		if ( self::get_future_payments_amount() > 0 ) {
+	public function display_cart_totals_before() {		
+                if ( self::get_future_payments_amount() > 0 ) {
 			ob_start();
 		}
 	}
@@ -318,6 +369,7 @@ class WC_Deposits_Cart_Manager {
 	 */
 	public function display_cart_totals_after() {
 		$future_payment_amount = self::get_future_payments_amount();
+                $due_today_payment_amount = self::get_due_today_amount();
 
 		if ( 0 >= $future_payment_amount ) {
 			return;
@@ -326,7 +378,9 @@ class WC_Deposits_Cart_Manager {
 		ob_end_clean(); ?>
 		<tr class="order-total">
 			<th><?php _e( 'Due Today', 'woocommerce-deposits' ); ?></th>
-			<td><?php wc_cart_totals_order_total_html(); ?></td>
+			<td><?php //wc_cart_totals_order_total_html();
+                                echo wc_price($due_today_payment_amount);                                       
+                        ?></td>
 		</tr>
 		<tr class="order-total">
 			<th><?php _e( 'Future&nbsp;Payments&nbsp;', 'woocommerce-deposits' ); ?></th>

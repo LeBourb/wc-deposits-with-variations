@@ -16,7 +16,7 @@ class WC_Deposits_Product_Manager {
 	public static function deposits_enabled( $product_id, $check_variations = true ) {
 		$product = wc_get_product( $product_id );
 
-		if ( ! $product || $product->is_type( array( 'grouped', 'external' ) ) ) {
+		if ( ! $product || $product->is_type( array( 'grouped', 'external' ) ) ) {                    
 			return false;
 		}
 
@@ -40,7 +40,7 @@ class WC_Deposits_Product_Manager {
 		if ( empty( $setting ) ) {
 			$setting = get_option( 'wc_deposits_default_enabled', 'no' );
 		}
-
+                
 		if ( 'optional' === $setting || 'forced' === $setting ) {
 			if ( 'plan' === self::get_deposit_type( $product_id ) && ! self::has_plans( $product_id ) ) {
 				return false;

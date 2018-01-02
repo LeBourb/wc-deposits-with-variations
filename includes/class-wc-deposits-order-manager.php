@@ -43,11 +43,12 @@ class WC_Deposits_Order_Manager {
 		add_action( 'woocommerce_order_item_meta_end', array( $this, 'woocommerce_order_item_meta_end' ), 10, 3 );
 		add_filter( 'woocommerce_get_order_item_totals', array( $this, 'woocommerce_get_order_item_totals' ), 10, 2 );
 		add_filter( 'request', array( $this, 'request_query' ) );
-		add_action( 'woocommerce_ajax_add_order_item_meta', array( $this, 'ajax_add_order_item_meta' ), 10, 2 );
+		//add_action( 'woocommerce_ajax_add_order_item_meta', array( $this, 'ajax_add_order_item_meta' ), 10, 2 ); 
 
 		// Stock management
 		add_filter( 'woocommerce_payment_complete_reduce_order_stock', array( $this, 'allow_reduce_order_stock' ), 10, 2 );
 		add_filter( 'woocommerce_can_reduce_order_stock', array( $this, 'allow_reduce_order_stock' ), 10, 2 );
+                
 	}
 
 	/**
@@ -528,9 +529,9 @@ class WC_Deposits_Order_Manager {
 			}
 
 			// Change line item costs
-			$deposit_amount = WC_Deposits_Product_Manager::get_deposit_amount( $product, $plan_id, 'order', $item['line_total'] );
-			wc_update_order_item_meta( $item_id, '_line_total', $deposit_amount );
-			wc_update_order_item_meta( $item_id, '_line_subtotal', $deposit_amount );
+			//$deposit_amount = WC_Deposits_Product_Manager::get_deposit_amount( $product, $plan_id, 'order', $item['line_total'] );
+			//wc_update_order_item_meta( $item_id, '_line_total', $deposit_amount );
+                        //wc_update_order_item_meta( $item_id, '_line_subtotal', $deposit_amount );
 		}
 	}
 
