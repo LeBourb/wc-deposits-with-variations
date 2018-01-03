@@ -49,7 +49,74 @@ class WC_Deposits_Order_Manager {
 		add_filter( 'woocommerce_payment_complete_reduce_order_stock', array( $this, 'allow_reduce_order_stock' ), 10, 2 );
 		add_filter( 'woocommerce_can_reduce_order_stock', array( $this, 'allow_reduce_order_stock' ), 10, 2 );
                 
+                add_filter( 'woocommerce_my_account_my_orders_actions',  array( $this, 'woocommerce_my_account_my_orders_actions' ), 10, 2 );
+                
+                 
+
+            add_action('woocommerce_view_order',  array( $this, 'woocommerce_remaining_checkout' ), 90, 2 );
+            add_action( 'wp_loaded', array( $this, 'checkout_remaining_action' ), 80 );
+            
+            //admin
+            add_action( 'woocommerce_admin_order_totals_after_total', array( $this, 'admin_order_totals_after_total' ) ,40 , 2 ); 
+            
 	}
+        
+        public function admin_order_totals_after_total ($order_id) {
+            $order = wc_get_order($order_id);
+            //status must be partially paid:
+            if( $order->get_status() === 'partial-payment' ) {
+                $remaining_and_paid =   $this->get_remaining_and_paid($order);
+                ?>
+                <tr>
+			<td class="label"><?php _e( 'Paid', 'woocommerce' ); ?>:</td>
+			<td width="1%"></td>
+			<td class="total">
+				<?php echo wc_price($remaining_and_paid['paid']); ?>
+			</td>
+		</tr>
+                <tr>
+			<td class="label"><?php _e( 'Remaining', 'woocommerce' ); ?>:</td>
+			<td width="1%"></td>
+			<td class="total">
+				<?php echo wc_price($remaining_and_paid['remaining']); ?>
+			</td>
+		</tr>
+            <?php 
+            }
+            
+        }
+        public function checkout_remaining_action () {
+            if ( isset( $_POST['woocommerce_checkout_place_final_payment'] ) ) {
+                nocache_headers();
+
+                wc_maybe_define_constant( 'WOOCOMMERCE_CHECKOUT', true );
+
+                //WC()->checkout()->process_checkout();
+                WC()->checkout()->process_order_payment( $order_id, $posted_data['payment_method'] );
+                $order = wc_get_order( $order_id );
+
+		// Mark as on-hold (we're awaiting the payment)
+		$order->update_status( 'on-hold', __( 'Awaiting BACS payment', 'woocommerce' ) );
+                //process_payment()
+            }
+        }
+        
+        
+        function woocommerce_remaining_checkout($order_id)
+        {
+            $order = wc_get_order($order_id);
+            //status must be partially paid:
+            if( $order->get_status() === 'partial-payment' ) {
+                $remaining_and_paid =   $this->get_remaining_and_paid($order);
+                $order_button_text = 'Place Final Payment';
+                echo '<section id="checkout-remaining">';
+                echo '<h2 class="woocommerce-order-remaining_checkout">Remaining Checkout</h2>';
+                echo '<tr><th scope="row">Payment&nbsp;</th><td>' . wc_price($remaining_and_paid['remaining']) . '</td></tr>';
+                include ( plugin_dir_path( __FILE__ ) . 'views/payment-remaining.php');             
+                echo '</section>';
+            }
+
+        }
 
 	/**
 	 * Does the order contain a deposit
@@ -130,6 +197,19 @@ class WC_Deposits_Order_Manager {
                 } 
 		return $query;
 	}
+        
+        /*
+         * Hage
+         */
+        public function woocommerce_my_account_my_orders_actions ($actions, $order ) {
+            if ( $this->has_deposit( $order ) && $order->get_status() === 'partial-payment'  ) { // remaining not paid ! 
+                $actions['pay remaining'] = array(
+			'url'  => $order->get_view_order_url() . '/#checkout-remaining',
+			'name' => __( 'Pay Remaining', 'woocommerce' ),
+		);
+            }
+            return $actions;
+        }
 
 	/**
 	 * Process deposits in an order after payment
@@ -454,7 +534,7 @@ class WC_Deposits_Order_Manager {
             
 		if ( $this->has_deposit( $order ) ) {
                    
-			$remaining = 0;
+			/*$remaining = 0;
 			$paid      = 0;
 			foreach( $order->get_items() as $item ) {
 				if ( WC_Deposits_Order_Item_Manager::is_deposit( $item ) ) {
@@ -486,7 +566,7 @@ class WC_Deposits_Order_Manager {
 				}
 			}
                         $remaining  =   $order->get_subtotal() + $order->get_shipping_total() - $paid;
-			/*if ( $remaining && $paid ) {
+			if ( $remaining && $paid ) {
                             	$total_rows['paid'] = array(
 					'label' => __( 'Paid', 'woocommerce-deposits' ),
 					'value'	=> '<del>' . wc_price( $paid ) . '</del> <ins>' . wc_price( $remaining ) . '</ins>'
@@ -496,18 +576,56 @@ class WC_Deposits_Order_Manager {
 					'value'	=> '<del>' . wc_price( $remaining + $paid ) . '</del> <ins>' . wc_price( $remaining ) . '</ins>'
 				);
 			} elseif ( $remaining ) {*/
+                                $remaining_paid = $this->get_remaining_and_paid($order);
                                 $total_rows['paid'] = array(
 					'label' => __( 'Paid', 'woocommerce-deposits' ),
-					'value'	=> wc_price( $paid )
+					'value'	=> wc_price( $remaining_paid['paid'] )
 				);
 				$total_rows['future'] = array(
 					'label' => __( 'Future&nbsp;Payments&nbsp;', 'woocommerce-deposits' ),
-					'value'	=> wc_price( $remaining )
+					'value'	=> wc_price( $remaining_paid['remaining'] )
 				);
 			//}
 		}
 		return $total_rows;
 	}
+        
+        public function get_remaining_and_paid( $order ) {
+                /*$related_orders = WC_Deposits_Scheduled_Order_Manager::get_related_orders( $order->get_id() );
+
+			foreach ( $related_orders as $related_order_id ) {
+				$related_order = wc_get_order( $related_order_id );
+				if ( $related_order->has_status( 'processing', 'completed' ) ) {
+					$paid += $related_order->get_total();
+				} else {
+					$remaining += $related_order->get_total();
+				}
+			}*/
+            if ( $this->has_deposit( $order ) ) {                   
+                $remaining = 0;
+                $paid      = 0;
+                foreach( $order->get_items() as $item ) {
+                    if ( WC_Deposits_Order_Item_Manager::is_deposit( $item ) ) {
+
+                            if ( ! WC_Deposits_Order_Item_Manager::get_payment_plan( $item ) ) {
+                                // R14: create a new invoice
+
+                                    $remaining_balance_order_id = ! empty( $item['remaining_balance_order_id'] ) ? absint( $item['remaining_balance_order_id'] ) : 0;
+                                    $remaining_balance_paid     = ! empty( $item['remaining_balance_paid'] );
+                                    if ( empty( $remaining_balance_order_id ) && ! $remaining_balance_paid ) {
+                                            $remaining += $item['deposit_full_amount'] - ( $order->get_line_subtotal( $item, true ) + $item['line_tax'] );
+                                    }
+                                    $paid += $item['deposit_full_amount'];
+                            }
+                    }else {
+                        $paid += $item['full_amount'];
+                    }
+                }
+                $remaining  =   $order->get_subtotal() + $order->get_shipping_total() - $paid;
+                return array('remaining' => $remaining, 'paid' => $paid);
+            }
+            else return null;
+        }
 
 	/**
 	 * Admin filters
