@@ -40,6 +40,8 @@ class WC_Deposits_Order_Manager {
 		// View orders
 		add_filter( 'woocommerce_my_account_my_orders_query', array( $this, 'woocommerce_my_account_my_orders_query' ) );
 		add_filter( 'woocommerce_order_item_name', array( $this, 'woocommerce_order_item_name' ), 10, 2 );
+                add_filter( 'woocommerce_order_item_meta_start', array( $this, 'woocommerce_order_item_production_status' ), 10, 2 );
+                
 		add_action( 'woocommerce_order_item_meta_end', array( $this, 'woocommerce_order_item_meta_end' ), 10, 3 );
 		add_filter( 'woocommerce_get_order_item_totals', array( $this, 'woocommerce_get_order_item_totals' ), 10, 2 );
 		add_filter( 'request', array( $this, 'request_query' ) );
@@ -506,6 +508,21 @@ class WC_Deposits_Order_Manager {
 		}
 		return $item_name;
 	}
+        
+        public function woocommerce_order_item_production_status( $item_name, $item ) {
+		$production_id = $item->get_meta('_production_id',true);
+                $html = '<p>Production Status: ';
+                if($production_id == '') {
+                    $html .= 'NO PRODUCTION';
+                }
+                else {
+                    $html .= get_post_status($production_id);
+                }
+                $html .= '</p>';
+                print($html);
+	}
+        
+        
 
 	/**
 	 * Add info about a deposit when viewing an order
