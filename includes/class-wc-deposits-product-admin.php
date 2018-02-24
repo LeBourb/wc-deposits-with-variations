@@ -25,7 +25,9 @@ class WC_Deposits_Plans_Product_Admin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'styles_and_scripts' ) );
 		add_action( 'woocommerce_process_product_meta', array( $this,'save_product_data' ), 20 );
 		add_action( 'woocommerce_product_write_panel_tabs', array( $this, 'add_tab' ), 5 );
-		add_action( 'woocommerce_product_write_panels', array( $this, 'deposit_panel' ) );
+		//add_action( 'woocommerce_product_write_panels', array( $this, 'deposit_panel' ) );
+                add_action( 'woocommerce_product_data_panels', array( $this, 'deposit_panel' ) );
+                
 
 		add_action( 'woocommerce_variation_options', array( $this, 'variations_options' ), 10, 3 );
 		add_action( 'woocommerce_product_after_variable_attributes', array( $this, 'variation_deposit_panel'), 10, 3 );

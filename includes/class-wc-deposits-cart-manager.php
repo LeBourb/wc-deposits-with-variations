@@ -255,12 +255,46 @@ class WC_Deposits_Cart_Manager {
 	 * @return array cart item
 	 */
 	public function add_cart_item( $cart_item ) {
+                // Support multi price: 
+                // change the full amount with Priv or Pre-Sale Price
+                $product_id = null;
+                if ( is_numeric( $cart_item['data'] ) ) {
+                    $product = wc_get_product( $cart_item['data'] );
+                    $product_id =  $product->get_id();                 
+		}else {
+                    $product_id = $cart_item['data']->get_id();
+                }
+                
+                if(isset($cart_item['variation_id']) && $cart_item['variation_id'] != '') {
+                    $pre_sale_price = get_post_meta($cart_item['variation_id'],'pre_sale_price',true);
+                    $priv_sale_price = get_post_meta($cart_item['variation_id'],'priv_sale_price',true);
+                }else {
+                    $pre_sale_price = get_post_meta($cart_item['product_id'],'pre_sale_price',true);
+                    $priv_sale_price = get_post_meta($cart_item['product_id'],'priv_sale_price',true);
+                }
+                                
+                if( $priv_sale_price > 0 ) {
+                    $cart_item['price'] = $priv_sale_price;                    
+                }
+                
+                               
+                //if(is_a($cart_item['data'] ,'WC_Product_Variation')) {
+                    
+                    $cart_item['data']->set_price($priv_sale_price);
+                    $cart_item['data']->set_regular_price($priv_sale_price);
+                    //throw new Exception('Cart item price: ' . print_r($cart_item['data']));
+                //}
+                $cart_item['line_total'] =  $cart_item['quantity'] * $cart_item['price'];
+                
+                
+                
 		if ( ! empty( $cart_item['is_deposit'] ) ) {
                         
 			$deposit_amount = WC_Deposits_Product_Manager::get_deposit_amount( $cart_item['data'], ! empty( $cart_item['payment_plan'] ) ? $cart_item['payment_plan'] : 0 );
 			if ( false !== $deposit_amount ) {
                             
 				$cart_item['deposit_amount'] = $deposit_amount;
+                                
 
 				// Bookings support
 				if ( isset( $cart_item['booking']['_persons'] ) && 'yes' === get_post_meta( $cart_item['data']->id, '_wc_deposit_multiple_cost_by_booking_persons', true ) ) {
@@ -310,7 +344,8 @@ class WC_Deposits_Cart_Manager {
 	 * Show the correct item price
 	 */
 	public function display_item_price( $output, $cart_item, $cart_item_key ) {
-		if ( ! empty( $cart_item['is_deposit'] ) ) {                        
+		$output = wc_price($cart_item['price']);
+                if ( ! empty( $cart_item['is_deposit'] ) ) {                        
 			$_product = $cart_item['data'];
 			if ( 'excl' === WC()->cart->tax_display_cart ) {
                             //$amount = wc_get_price_excluding_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount'])); 
@@ -330,6 +365,7 @@ class WC_Deposits_Cart_Manager {
 	 * Adjust the subtotal display in the cart
 	 */
 	public function display_item_subtotal( $output, $cart_item, $cart_item_key ) {
+                $output = wc_price($cart_item['quantity'] * $cart_item['price']);                
 		if ( ! empty( $cart_item['is_deposit'] ) ) {
 			$_product = $cart_item['data'];
 			$quantity = $cart_item['quantity'];
