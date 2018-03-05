@@ -53,7 +53,8 @@ class WC_Deposits_Order_Manager {
                 
                 add_filter( 'woocommerce_my_account_my_orders_actions',  array( $this, 'woocommerce_my_account_my_orders_actions' ), 10, 2 );
                 
-                 
+              add_action( 'woocommerce_checkout_order_processed', array( $this, 'checkout_order_processed' ), 10, 2 );
+              
 
             add_action('woocommerce_view_order',  array( $this, 'woocommerce_remaining_checkout' ), 90, 2 );
             add_action( 'wp_loaded', array( $this, 'checkout_remaining_action' ), 80 );
@@ -118,6 +119,28 @@ class WC_Deposits_Order_Manager {
                 echo '</section>';
             }
 
+        }
+        
+        public function checkout_order_processed ($order_id, $posted_data, $order = null) {
+             if( $order == null)
+                $order    = wc_get_order( $order_id );
+             if ( self::has_deposit( $order ) ) {                   
+                $remaining = 0;
+                $topay      = 0;
+                foreach( $order->get_items() as $item ) {
+                    if ( WC_Deposits_Order_Item_Manager::is_deposit( $item ) ) {
+
+                            if ( ! WC_Deposits_Order_Item_Manager::get_payment_plan( $item ) ) {
+                                // R14: create a new invoice
+                                    $topay += $item['deposit_full_amount'];
+                            }
+                    }else {
+                        $topay += $item['full_amount'];
+                    }
+                }                                
+                $order->set_total($topay);
+                $order->save();
+            }
         }
 
 	/**

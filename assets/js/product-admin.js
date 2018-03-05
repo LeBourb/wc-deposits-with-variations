@@ -31,7 +31,7 @@ jQuery( function( $ ){
 		if ( 'percent' === $(this).val() )  {
 			
 			$panel.find( '._wc_deposit_amount_field').find( 'input' ).attr( 'placeholder', $panel.find( '._wc_deposits_default_amount_field' ).val() )
-				end().show();
+				.end().show();
 			
 		} else if ( 'fixed' === $(this).val() ) {
 			

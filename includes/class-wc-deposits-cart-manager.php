@@ -38,6 +38,7 @@ class WC_Deposits_Cart_Manager {
 		add_action( 'woocommerce_add_order_item_meta', array( $this, 'add_order_item_meta' ), 50, 2 );
 		add_filter( 'woocommerce_available_payment_gateways', array( $this, 'disable_gateways' ) );
                 
+                add_filter( 'woocommerce_calculated_total', array( $this, 'calculated_total' ) );
                 add_filter( 'woocommerce_cart_subtotal', array( $this, 'cart_subtotal'), 10, 3 ); 
                 
 		// Change button/cart URLs
@@ -111,9 +112,14 @@ class WC_Deposits_Cart_Manager {
                             
                         }
 		}
-
+                
 		return $due_today_amount;
 	}
+        
+        
+        public function calculated_total($total,$cart = null) {            
+            return $this->get_due_today_amount();
+        }
 
 	/**
 	 * See whats left to pay after deposits
@@ -348,7 +354,7 @@ class WC_Deposits_Cart_Manager {
                 if ( ! empty( $cart_item['is_deposit'] ) ) {                        
 			$_product = $cart_item['data'];
 			if ( 'excl' === WC()->cart->tax_display_cart ) {
-                            //$amount = wc_get_price_excluding_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount'])); 
+                            //$amount = wc_get_price_excluding_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount']));                             
                             $output .= '<br/><small>' . sprintf( __( '%s deposit', 'woocommerce-deposits' ), wc_price( $cart_item['deposit_amount'] ) ) . '</small>';
                             
 			} else {
@@ -415,7 +421,8 @@ class WC_Deposits_Cart_Manager {
 		<tr class="order-total">
 			<th><?php _e( 'Due Today', 'woocommerce-deposits' ); ?></th>
 			<td><?php //wc_cart_totals_order_total_html();
-                                echo wc_price($due_today_payment_amount);                                       
+                                //echo wc_price($due_today_payment_amount);                                       
+                                echo WC()->cart->get_total();
                         ?></td>
 		</tr>
 		<tr class="order-total">
