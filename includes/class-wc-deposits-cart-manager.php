@@ -278,16 +278,23 @@ class WC_Deposits_Cart_Manager {
                     $pre_sale_price = get_post_meta($cart_item['product_id'],'pre_sale_price',true);
                     $priv_sale_price = get_post_meta($cart_item['product_id'],'priv_sale_price',true);
                 }
-                                
-                if( $priv_sale_price > 0 ) {
-                    $cart_item['price'] = $priv_sale_price;                    
+                            
+                $user = wp_get_current_user(); 
+                $roles = ( array ) $user->roles;
+                
+                if( $priv_sale_price > 0 && in_array( 'customer-pro', $roles ) ) {
+                    $cart_item['price'] = $priv_sale_price;                 
+                    $cart_item['data']->set_price($priv_sale_price);
+                    $cart_item['data']->set_regular_price($priv_sale_price);
+                }else {
+                    $cart_item['price'] = $pre_sale_price;                        
+                    $cart_item['data']->set_price($pre_sale_price);
+                    $cart_item['data']->set_regular_price($pre_sale_price);
                 }
                 
                                
                 //if(is_a($cart_item['data'] ,'WC_Product_Variation')) {
                     
-                    $cart_item['data']->set_price($priv_sale_price);
-                    $cart_item['data']->set_regular_price($priv_sale_price);
                     //throw new Exception('Cart item price: ' . print_r($cart_item['data']));
                 //}
                 $cart_item['line_total'] =  $cart_item['quantity'] * $cart_item['price'];
