@@ -127,9 +127,9 @@ class WC_Deposits_Product_Manager {
 			}
 
 			if ( 'percent' === $type ) {
-				return sprintf( __( 'Pay a %1$s deposit per %2$s', 'woocommerce-deposits' ), '<span class="wc-deposits-amount">' . $amount . '</span>', $item );
+				return sprintf( __( 'Pay a %1$s deposit per %2$s', 'woocommerce-deposits' ), '<span class="wc-deposits-amount">' . wc_price($amount) . '</span>', $item );
 			} else {
-				return sprintf( __( 'Pay a deposit of %1$s per %2$s', 'woocommerce-deposits' ), '<span class="wc-deposits-amount">' . $amount . '</span>', $item );
+				return sprintf( __( 'Pay a deposit of %1$s per %2$s', 'woocommerce-deposits' ), '<span class="wc-deposits-amount">' . wc_price($amount) . '</span>', $item );
 			}
 		}
 		return '';
@@ -157,7 +157,14 @@ class WC_Deposits_Product_Manager {
 		if ( is_numeric( $product ) ) {
 			$product = wc_get_product( $product );
 		}
-		$variation_id = $product->get_id();
+                
+                $variation_id = null;
+                if(is_a($product, 'WC_Product_Variable')) {  
+                        //first variation
+                        $variations = $product->get_available_variations( );
+                        $variation_id = $variations[0]['variation_id'];
+                }
+		
                 //$variation_id = $product->id;
                 $item_id = ( $variation_id ) ? $variation_id : $product->get_id();
 		//print_r($product->id);
@@ -193,9 +200,26 @@ class WC_Deposits_Product_Manager {
 			$percentage    = ( 'percentage' === $plan->get_type() );
 		}
 
-		if ( $percentage ) {
-			$product_price = is_null( $product_price ) ? $product->get_price() : $product_price;
-			$amount        = ( $product_price / 100 ) * $amount;
+		if ( $percentage ) {       
+                    $user = wp_get_current_user();
+                    $role = ( array ) $user->roles;
+                    if(is_a($product, 'WC_Product_Variable')) {  
+                        //first variation
+                        $variations = $product->get_available_variations( );
+                        $product_id = $variations[0]['variation_id'];
+                        if(in_array( 'customer-pro', $role )) {
+                            $product_price = get_post_meta($product_id,'priv_sale_price',true);
+                        } else {
+                            $product_price = get_post_meta($product_id,'pre_sale_price',true);
+                        }
+                    }else {
+                        if(in_array( 'customer-pro', $role )) {
+                            $product_price = get_post_meta($product->get_id(),'priv_sale_price',true);
+                        } else {
+                            $product_price = get_post_meta($product->get_id(),'pre_sale_price',true);
+                        }
+                    }
+                    $amount        = ( $product_price / 100 ) * $amount;
 		}
 
 		if ( 'display' === $context ) {

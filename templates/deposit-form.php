@@ -24,6 +24,10 @@
 	<?php else : ?>
 		<div class="wc-deposits-payment-description">
 			<?php echo WC_Deposits_Product_Manager::get_formatted_deposit_amount( $post->ID ); ?>
+                    <ul><li>分割２回払い（今は半額だけ払い, 商品お届け前に残り半額を支払う）</li>
+                        <li>全額前払い</li>
+                       </ul> 
+
 		</div>
 	<?php endif; ?>
 </div>

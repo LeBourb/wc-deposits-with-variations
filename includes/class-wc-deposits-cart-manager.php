@@ -86,7 +86,8 @@ class WC_Deposits_Cart_Manager {
 	public function get_future_payments_amount() {
            //WC()->cart->calculate_shipping( );
 	 //echo 'int val: ' . intval(WC()->cart->shipping_total);	
-            return $this->get_deposit_remaining_amount() + $this->get_credit_amount() + WC()->cart->shipping_total;
+            //remove shipping ! 
+            return $this->get_deposit_remaining_amount() + $this->get_credit_amount();
 	}
         
         public function get_due_today_amount() {
@@ -113,6 +114,8 @@ class WC_Deposits_Cart_Manager {
                         }
 		}
                 
+                // add shipping ? 
+                $due_today_amount += WC()->cart->shipping_total;
 		return $due_today_amount;
 	}
         
