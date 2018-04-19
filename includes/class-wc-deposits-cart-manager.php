@@ -438,7 +438,8 @@ class WC_Deposits_Cart_Manager {
 		<tr class="order-total">
                     
 			<th><?php _e( 'Future&nbsp;Payments&nbsp;', 'woocommerce-deposits' ); ?></th>
-			<td><strong><?php echo wc_price( $future_payment_amount ); ?></strong></td>
+			<td><strong><?php echo wc_price( $future_payment_amount ); ?></strong></td>                        
+                        
 		</tr><?php
 	}
 

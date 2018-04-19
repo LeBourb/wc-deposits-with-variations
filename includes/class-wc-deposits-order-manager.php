@@ -36,6 +36,9 @@ class WC_Deposits_Order_Manager {
 		add_action( 'woocommerce_after_order_itemmeta', array( $this, 'woocommerce_after_order_itemmeta' ), 10, 3 );
 		add_action( 'admin_init', array( $this, 'order_action_handler' ) );
 		add_action( 'woocommerce_payment_complete', array( $this, 'payment_complete_handler' ) );
+                
+                
+                //add_action('woocommerce_order_after_calculate_totals' , array( $this, 'after_calculate_totals' ), 10, 2);
 
 		// View orders
 		add_filter( 'woocommerce_my_account_my_orders_query', array( $this, 'woocommerce_my_account_my_orders_query' ) );
@@ -63,6 +66,12 @@ class WC_Deposits_Order_Manager {
             add_action( 'woocommerce_admin_order_totals_after_total', array( $this, 'admin_order_totals_after_total' ) ,40 , 2 ); 
             
 	}
+        
+        /*public function after_calculate_totals ($and_taxes, $order) {
+            print_r($order->get_total());
+            throw new Exception('Division par zéro.');
+            return;
+        }*/
         
         public function admin_order_totals_after_total ($order_id) {
             $order = wc_get_order($order_id);
@@ -137,7 +146,9 @@ class WC_Deposits_Order_Manager {
                     }else {
                         $topay += $item['full_amount'];
                     }
-                }                                
+                }        
+                //add shipping to total => must be paid first!
+                $topay += $order->get_shipping_total();
                 $order->set_total($topay);
                 $order->save();
             }
@@ -573,7 +584,6 @@ class WC_Deposits_Order_Manager {
 	public function woocommerce_get_order_item_totals( $total_rows, $order ) {
             
 		if ( $this->has_deposit( $order ) ) {
-                   
 			/*$remaining = 0;
 			$paid      = 0;
 			foreach( $order->get_items() as $item ) {
@@ -661,7 +671,8 @@ class WC_Deposits_Order_Manager {
                         $paid += $item['full_amount'];
                     }
                 }
-                $remaining  =   $order->get_subtotal() + $order->get_shipping_total() - $paid;
+                $paid += $order->get_shipping_total();
+                $remaining  =   $order->get_subtotal() - $paid;
                 return array('remaining' => $remaining, 'paid' => $paid);
             }
             else return null;
