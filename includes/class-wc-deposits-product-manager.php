@@ -127,7 +127,6 @@ class WC_Deposits_Product_Manager {
 			}
 
 			if ( 'percent' === $type ) {
-				return sprintf( __( 'Pay a %1$s deposit per %2$s', 'woocommerce-deposits' ), '<span class="wc-deposits-amount">' . wc_price($amount) . '</span>', $item );
 			} else {
 				return sprintf( __( 'Pay a deposit of %1$s per %2$s', 'woocommerce-deposits' ), '<span class="wc-deposits-amount">' . wc_price($amount) . '</span>', $item );
 			}
