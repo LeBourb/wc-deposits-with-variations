@@ -365,11 +365,11 @@ class WC_Deposits_Cart_Manager {
 			$_product = $cart_item['data'];
 			if ( 'excl' === WC()->cart->tax_display_cart ) {
                             //$amount = wc_get_price_excluding_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount']));                             
-                            $output .= '<br/><small>' . sprintf( __( '%s deposit', 'woocommerce-deposits' ), wc_price( $cart_item['deposit_amount'] ) ) . '</small>';
+                            $output .= '<br/><small>' . sprintf( __( '予約時のお支払い: %s', 'woocommerce-deposits' ), wc_price( $cart_item['deposit_amount'] ) ) . '</small>';
                             
 			} else {
                             //$amount = wc_get_price_including_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount']));
-                            $output .= '<br/><small>' . sprintf( __( '%s deposit', 'woocommerce-deposits' ), wc_price( $cart_item['deposit_amount'] ) ) . '</small>';
+                            $output .= '<br/><small>' . sprintf( __( '予約時のお支払い: %s', 'woocommerce-deposits' ), wc_price( $cart_item['deposit_amount'] ) ) . '</small>';
                             
 			}
                         //$output = 'toto' . wc_price( $amount );
@@ -401,7 +401,7 @@ class WC_Deposits_Cart_Manager {
 				$plan = new WC_Deposits_Plan( $cart_item['payment_plan'] );
 				$output .= '<br/><small>' . $plan->get_formatted_schedule( $deposit_full_amount ) . '</small>';
 			} else {
-				$output .= '<br/><small>' . sprintf( __( '%s payable today', 'woocommerce-deposits' ), wc_price( $deposit_amount ) ) . '</small>';
+				$output .= '<br/><small>' . sprintf( __( '今回のお支払い: %s', 'woocommerce-deposits' ), wc_price( $deposit_amount ) ) . '</small>';
 			}
 		}
 		return $output;

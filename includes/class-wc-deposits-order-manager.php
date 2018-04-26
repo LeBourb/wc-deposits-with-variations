@@ -537,7 +537,7 @@ class WC_Deposits_Order_Manager {
 			if ( $payment_plan = WC_Deposits_Order_Item_Manager::get_payment_plan( $item ) ) {
 				$item_name .= ' (' . $payment_plan->get_name() . ')';
 			} else {
-				$item_name .= ' (' . __( 'Deposit', 'woocommerce-deposits' ) . ')';
+				$item_name .= ' (分割２回払い)';
 			}
 		}
 		return $item_name;
@@ -545,9 +545,9 @@ class WC_Deposits_Order_Manager {
         
         public function woocommerce_order_item_production_status( $item_name, $item ) {
 		$production_id = $item->get_meta('_production_id',true);
-                $html = '<p>Production Status: ';
+                $html = '<p>生産状況: ';
                 if($production_id == '') {
-                    $html .= 'NO PRODUCTION';
+                    $html .= '生産前（予約注文受付期間）';
                 }
                 else {
                     $html .= get_post_status($production_id);
@@ -628,13 +628,15 @@ class WC_Deposits_Order_Manager {
 			} elseif ( $remaining ) {*/
                                 $remaining_paid = $this->get_remaining_and_paid($order);
                                 $total_rows['paid'] = array(
-					'label' => __( 'Paid', 'woocommerce-deposits' ),
+					'label' => '今回のお支払い金額:',
 					'value'	=> wc_price( $remaining_paid['paid'] )
 				);
 				$total_rows['future'] = array(
-					'label' => __( 'Future&nbsp;Payments&nbsp;', 'woocommerce-deposits' ),
+					'label' => '次回のお支払い金額:',
 					'value'	=> wc_price( $remaining_paid['remaining'] )
 				);
+                                // chage the label for total if this is a deposit:
+                                $total_rows['order_total']['label'] = '今回のお支払い合計:';
 			//}
 		}
 		return $total_rows;

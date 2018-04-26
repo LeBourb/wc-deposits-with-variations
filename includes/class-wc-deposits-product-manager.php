@@ -127,6 +127,7 @@ class WC_Deposits_Product_Manager {
 			}
 
 			if ( 'percent' === $type ) {
+				return sprintf( __( '今回のお支払い額 （商品代金の半額）: %1$s', 'woocommerce-deposits' ), '<span class="wc-deposits-amount">' . wc_price($amount) . '</span>');
 			} else {
 				return sprintf( __( 'Pay a deposit of %1$s per %2$s', 'woocommerce-deposits' ), '<span class="wc-deposits-amount">' . wc_price($amount) . '</span>', $item );
 			}
