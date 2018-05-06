@@ -116,7 +116,7 @@ class WC_Deposits_Cart_Manager {
                 
                 // add shipping ? 
                 $due_today_amount += WC()->cart->shipping_total;
-		return $due_today_amount;
+                return $due_today_amount;
 	}
         
         
@@ -430,7 +430,7 @@ class WC_Deposits_Cart_Manager {
 		ob_end_clean(); ?>
 		<tr class="order-total">
 			<th><?php _e( '今回のお支払額', 'woocommerce-deposits' ); ?></th>
-			<td><?php //wc_cart_totals_order_total_html();
+			<td  data-title="今回のお支払額"><?php //wc_cart_totals_order_total_html();
                                 //echo wc_price($due_today_payment_amount);                                       
                                 echo WC()->cart->get_total();
                         ?></td>
@@ -438,7 +438,7 @@ class WC_Deposits_Cart_Manager {
 		<tr class="order-total">
                     
 			<th><?php _e( '次回（商品のお届け準備完了時）のお支払い金額', 'woocommerce-deposits' ); ?></th>
-			<td><strong><?php echo wc_price( $future_payment_amount ); ?></strong></td>                        
+			<td  data-title="次回のお支払い金額"><strong><?php echo wc_price( $future_payment_amount ); ?></strong></td>                        
                         
 		</tr><?php
 	}
