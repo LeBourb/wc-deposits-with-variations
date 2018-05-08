@@ -92,9 +92,11 @@ class WC_Deposits_Cart_Manager {
         
         public function get_due_today_amount() {
 		$due_today_amount = 0;
-                
-		foreach ( WC()->cart->get_cart() as $cart_item ) {                    
+                $has_deposit = 0;
+		foreach ( WC()->cart->get_cart() as $cart_item ) {       
+                    
 			if ( ! empty( $cart_item['is_deposit'] ) && empty( $cart_item['payment_plan'] ) ) {
+                                $has_deposit = true;
 				$_product = $cart_item['data'];
 				$quantity = $cart_item['quantity'];
 				if ( 'excl' === WC()->cart->tax_display_cart ) {
@@ -104,18 +106,21 @@ class WC_Deposits_Cart_Manager {
 				}
 			}else {
                             $_product = $cart_item['data'];
-				$quantity = $cart_item['quantity'];
+                            $quantity = $cart_item['quantity'];
                             if ( 'excl' === WC()->cart->tax_display_cart ) {
-                                    $due_today_amount += wc_get_price_excluding_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['line_total']) );					
+                                    $due_today_amount += wc_get_price_excluding_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['price']) );					
                             } else {
-                                    $due_today_amount += wc_get_price_including_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['line_total']) );					
+                                    $due_today_amount += wc_get_price_including_tax( $_product, array('qty' => $quantity,'price' =>  $cart_item['price']) );					
                             }
-                            
                         }
-		}
-                
+                        
+		}                
                 // add shipping ? 
-                $due_today_amount += WC()->cart->shipping_total;
+                $due_today_amount += WC()->cart->shipping_total;  
+                // discount is aplied later
+                if(!$has_deposit) {
+                    $due_today_amount -= $this->get_coupon_discount_total();
+                }
                 return $due_today_amount;
 	}
         
@@ -130,9 +135,10 @@ class WC_Deposits_Cart_Manager {
 	 */
 	public function get_deposit_remaining_amount() {
 		$credit_amount = 0;
-
+                $hasdeposit = false;
 		foreach ( WC()->cart->get_cart() as $cart_item ) {
 			if ( ! empty( $cart_item['is_deposit'] ) && empty( $cart_item['payment_plan'] ) ) {
+                                $hasdeposit = true;
 				$_product = $cart_item['data'];
 				$quantity = $cart_item['quantity'];
 				if ( 'excl' === WC()->cart->tax_display_cart ) {
@@ -142,9 +148,26 @@ class WC_Deposits_Cart_Manager {
 				}
 			}
 		}
-
+                // apply coupon
+                if($hasdeposit) {
+                    $credit_amount -= $this->get_coupon_discount_total();
+                    if ($credit_amount < 0) $credit_amount = 0;
+                }
+                
 		return $credit_amount;
 	}
+        
+        /**
+	 * See whats left to pay after deposits
+	 * @return float
+	 */
+	public function get_coupon_discount_total() {
+            $total_discount = 0;
+            foreach( WC()->cart->get_coupon_discount_totals( ) as $discount ) {
+                $total_discount += $discount;
+            }   
+            return $total_discount;
+        }
 
 	/**
 	 * See how much credit the user is giving the customer (for payment plans)

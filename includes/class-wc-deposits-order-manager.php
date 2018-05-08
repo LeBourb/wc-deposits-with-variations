@@ -149,6 +149,14 @@ class WC_Deposits_Order_Manager {
                 }        
                 //add shipping to total => must be paid first!
                 $topay += $order->get_shipping_total();
+                // apply coupon 
+                $total_discount = 0;
+                foreach( WC()->session->get( 'coupon_discount_totals', array() ) as $discount ) {
+                    $total_discount += $discount;
+                }	
+                if($total_discount>0)
+                    $order->add_meta_data( 'future_payment_discount', strval($total_discount) , true  );
+                // future_discount
                 $order->set_total($topay);
                 $order->save();
             }
@@ -627,10 +635,10 @@ class WC_Deposits_Order_Manager {
 				);
 			} elseif ( $remaining ) {*/
                                 $remaining_paid = $this->get_remaining_and_paid($order);
-                                $total_rows['paid'] = array(
+                                /*$total_rows['paid'] = array(
 					'label' => '今回のお支払い金額:',
 					'value'	=> wc_price( $remaining_paid['paid'] )
-				);
+				);*/
 				$total_rows['future'] = array(
 					'label' => '次回のお支払い金額:',
 					'value'	=> wc_price( $remaining_paid['remaining'] )
@@ -674,7 +682,15 @@ class WC_Deposits_Order_Manager {
                     }
                 }
                 $paid += $order->get_shipping_total();
-                $remaining  =   $order->get_subtotal() - $paid;
+                //$paid = $order->get_total();
+                
+                //apply coupon
+                $discount = 0;
+                $str_total_discount = $order->get_meta( 'future_payment_discount', true );
+                if(isset($str_total_discount) && $str_total_discount != "") {
+                    $discount = intval($str_total_discount);
+                }
+                $remaining  =  $order->get_subtotal() - $paid - $discount;
                 return array('remaining' => $remaining, 'paid' => $paid);
             }
             else return null;
