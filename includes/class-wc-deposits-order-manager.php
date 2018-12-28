@@ -59,7 +59,7 @@ class WC_Deposits_Order_Manager {
               add_action( 'woocommerce_checkout_order_processed', array( $this, 'checkout_order_processed' ), 10, 2 );
               
 
-            add_action('woocommerce_view_order',  array( $this, 'woocommerce_remaining_checkout' ), 90, 2 );
+            add_action('woocommerce_view_order',  array( $this, 'woocommerce_remaining_checkout' ), 10, 2 );
             add_action( 'wp_loaded', array( $this, 'checkout_remaining_action' ), 80 );
             
             //admin
@@ -117,16 +117,30 @@ class WC_Deposits_Order_Manager {
         function woocommerce_remaining_checkout($order_id)
         {
             $order = wc_get_order($order_id);
+            $remaining_and_paid =   $this->get_remaining_and_paid($order);
             //status must be partially paid:
-            if( $order->get_status() === 'partial-payment' ) {
-                $remaining_and_paid =   $this->get_remaining_and_paid($order);
+            $final_checkout_paid = $order->get_meta('_final_checkout_transaction_amount',true);
+            $final_checkout_method = $order->get_meta('_final_checkout_payment_method',true);
+            $final_checkout_date = $order->get_meta('_final_checkout_date',true);
+            $remaining = $remaining_and_paid['remaining'];
+            
+            if( $final_checkout_paid ==  $remaining ) {
+                echo '<section id="checkout-remaining">';
+                echo '<h2 class="woocommerce-order-remaining_checkout">Paid</h2>';
+                echo '<tr><th scope="row">You have paid:</th><td>' . wc_price($remaining_and_paid['remaining']) . '</td></tr>';
+                echo '<tr><th scope="row">Your payment method:</th><td>' . $final_checkout_method . '</td></tr>';
+                echo '<tr><th scope="row">Your payment date:</th><td>' . $final_checkout_date . '</td></tr>';
+                
+            }            
+            else if ($remaining_and_paid['remaining'] > 0) {
                 $order_button_text = 'Place Final Payment';
                 echo '<section id="checkout-remaining">';
-                echo '<h2 class="woocommerce-order-remaining_checkout">Remaining Checkout</h2>';
-                echo '<tr><th scope="row">Payment&nbsp;</th><td>' . wc_price($remaining_and_paid['remaining']) . '</td></tr>';
-                include ( plugin_dir_path( __FILE__ ) . 'views/payment-remaining.php');             
+                echo '<h2 class="woocommerce-order-remaining_checkout">残額のお支払い</h2>';
+                echo '<tr><th scope="row">お支払い金額&nbsp;</th><td>' . wc_price($remaining_and_paid['remaining']) . '</td></tr>';
+                include ( plugin_dir_path( __FILE__ ) . 'views/html-payment-remaining.php');             
                 echo '</section>';
             }
+                
 
         }
         
@@ -170,6 +184,9 @@ class WC_Deposits_Order_Manager {
 		if ( is_numeric( $order ) ) {
 			$order = wc_get_order( $order );
 		}
+                if(is_bool($order)) {
+                    return false;
+                }
 		foreach( $order->get_items() as $item ) {
 			if ( 'line_item' === $item['type'] && ! empty( $item['is_deposit'] ) ) {
 				return true;
@@ -206,7 +223,7 @@ class WC_Deposits_Order_Manager {
 	 * @return array
 	 */
 	public function add_order_statuses( $order_statuses ) {
-		$order_statuses['wc-partial-payment'] = _x( 'Partially Paid', 'Order status', 'woocommerce-deposits' );
+		$order_statuses['wc-partial-payment'] = _x( '一部お支払い完了', 'Order status', 'woocommerce-deposits' );
 		$order_statuses['wc-scheduled-payment'] = _x( 'Scheduled', 'Order status', 'woocommerce-deposits' );
 		return $order_statuses;
 	}
@@ -246,10 +263,15 @@ class WC_Deposits_Order_Manager {
          * Hage
          */
         public function woocommerce_my_account_my_orders_actions ($actions, $order ) {
-            if ( $this->has_deposit( $order ) && $order->get_status() === 'partial-payment'  ) { // remaining not paid ! 
+            //
+            $remaining =   $this->get_remaining_and_paid($order)['remaining'];
+            //status must be partially paid:
+            $final_checkout_paid = $order->get_meta('_final_checkout_transaction_amount',true);
+            
+            if ( $remaining > 0 && $remaining != $final_checkout_paid ) { // remaining not paid ! 
                 $actions['pay remaining'] = array(
 			'url'  => $order->get_view_order_url() . '/#checkout-remaining',
-			'name' => __( 'Pay Remaining', 'woocommerce' ),
+			'name' => __( '残額を支払う', 'woocommerce' ),
 		);
             }
             return $actions;
@@ -679,6 +701,10 @@ class WC_Deposits_Order_Manager {
                 if(isset($str_total_discount) && $str_total_discount != "") {
                     $discount = intval($str_total_discount);
                 }
+                
+                //deposit paid ?
+                
+                
                 $remaining  =  $order->get_subtotal() - $paid - $discount;
                 return array('remaining' => $remaining, 'paid' => $paid);
             }

@@ -1,7 +1,8 @@
 <?php
 /*
- * Plugin Name: WooCommerce Deposits
- * Plugin URI: http://www.woothemes.com/products/woocommerce-deposits/
+ * Plugin Name: ABourgeons Deposits
+ * Plugin URI: http://www.atelierbourgeons.com/abourgeons-deposits/
+ * Depends: WooCommerce
  * Description: Mark items as deposit items which customers can then place deposits on, rather than paying in full.
  * Version: 1.2.0
  * Forked from: 1.1.4
@@ -97,6 +98,7 @@ if ( is_woocommerce_active() ) {
 			include_once( 'includes/class-wc-deposits-scheduled-order-manager.php' );
 			include_once( 'includes/class-wc-deposits-product-manager.php' );
 			include_once( 'includes/class-wc-deposits-plan.php' );
+                        include_once( 'includes/class-wc-final-checkout.php' );
                         
                         include_once( 'includes/admin/wc-admin-order-item-remainder-invoice.php' );
                         

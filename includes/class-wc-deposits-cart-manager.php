@@ -46,24 +46,31 @@ class WC_Deposits_Cart_Manager {
 		add_filter( 'woocommerce_product_add_to_cart_text', array( $this, 'add_to_cart_text'), 15 );
 		add_filter( 'woocommerce_add_to_cart_url', array( $this, 'add_to_cart_url' ), 10, 1 );
 		add_filter( 'woocommerce_product_add_to_cart_url', array( $this, 'add_to_cart_url' ), 10, 1 );
+               //add_filter( 'woocommerce_is_checkout', array( $this, 'is_checkout' ) ,  10 , 1 );
 	}
+        
+        public function is_checkout() {
+            return true;
+        }
 
 	/**
 	 * Scripts and styles
 	 */
 	public function wp_enqueue_scripts() {
 		wp_enqueue_style( 'wc-deposits-frontend', WC_DEPOSITS_PLUGIN_URL . '/assets/css/frontend.css', null, WC_DEPOSITS_VERSION );
-		wp_register_script( 'wc-deposits-frontend', WC_DEPOSITS_PLUGIN_URL . '/assets/js/frontend.min.js', array( 'jquery' ), WC_DEPOSITS_VERSION, true );
+		wp_register_script( 'wc-deposits-frontend', WC_DEPOSITS_PLUGIN_URL . '/assets/js/frontend.min.js', array( 'jquery' ), WC_DEPOSITS_VERSION, true );                                                
 	}
 
 	/**
 	 * Show deposits form
 	 */
-	public function deposits_form_output() {
-                if ( WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) ) {                    
-			wp_enqueue_script( 'wc-deposits-frontend' );
-			wc_get_template( 'deposit-form.php', array( 'post' => $GLOBALS['post'] ), 'woocommerce-deposits', WC_DEPOSITS_TEMPLATE_PATH );
-		}
+	public function deposits_form_output() {                
+            $user = wp_get_current_user(); 
+            $role = ( array ) $user->roles;    
+            if ( WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) && in_array( 'customer-pro', $role ) ) {                    
+                wp_enqueue_script( 'wc-deposits-frontend' );
+                wc_get_template( 'deposit-form.php', array( 'post' => $GLOBALS['post'] ), 'woocommerce-deposits', WC_DEPOSITS_TEMPLATE_PATH );
+            }
 	}
 
 	/**
@@ -128,7 +135,7 @@ class WC_Deposits_Cart_Manager {
         public function calculated_total($total,$cart = null) {            
             return $this->get_due_today_amount();
         }
-
+        
 	/**
 	 * See whats left to pay after deposits
 	 * @return float
@@ -312,12 +319,18 @@ class WC_Deposits_Cart_Manager {
                     $cart_item['price'] = $priv_sale_price;                 
                     $cart_item['data']->set_price($priv_sale_price);
                     $cart_item['data']->set_regular_price($priv_sale_price);
-                }else {
+                }else if ($pre_sale_price > 0) {
                     $cart_item['price'] = $pre_sale_price;                        
                     $cart_item['data']->set_price($pre_sale_price);
                     $cart_item['data']->set_regular_price($pre_sale_price);
+                } 
+                else {
+                    // regular product with no deposit!
+                    $product = wc_get_product($product_id);
+                    $cart_item['price'] = $product->get_price();                        
+                    $cart_item['data']->set_price($product->get_price());
+                    $cart_item['data']->set_regular_price($product->get_price());                    
                 }
-                
                                
                 //if(is_a($cart_item['data'] ,'WC_Product_Variation')) {
                     
