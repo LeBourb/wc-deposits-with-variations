@@ -67,7 +67,7 @@ class WC_Deposits_Cart_Manager {
 	public function deposits_form_output() {                
             $user = wp_get_current_user(); 
             $role = ( array ) $user->roles;    
-            if ( WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) && in_array( 'customer-pro', $role ) ) {                    
+            if ( true /*WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) && in_array( 'customer-pro', $role )*/ ) {                    
                 wp_enqueue_script( 'wc-deposits-frontend' );
                 wc_get_template( 'deposit-form.php', array( 'post' => $GLOBALS['post'] ), 'woocommerce-deposits', WC_DEPOSITS_TEMPLATE_PATH );
             }
@@ -208,10 +208,10 @@ class WC_Deposits_Cart_Manager {
 	 * @return bool
 	 */
 	public function validate_add_cart_item( $passed, $product_id, $qty, $variation_id = null ) {
+            
 		if ( ! WC_Deposits_Product_Manager::deposits_enabled( $product_id ) ) {
 			return $passed;
 		}
-                
 		$wc_deposit_option       = isset( $_POST['wc_deposit_option'] ) ? sanitize_text_field( $_POST['wc_deposit_option'] ) : false;
 		$wc_deposit_payment_plan = isset( $_POST['wc_deposit_payment_plan'] ) ? sanitize_text_field( $_POST['wc_deposit_payment_plan'] ) : false;
 
@@ -518,7 +518,6 @@ class WC_Deposits_Cart_Manager {
 	 */
 	public function add_to_cart_text( $text ) {
 		global $product;
-
 		if ( is_single( $product->get_id() ) ) {
 			return $text;
 		}
@@ -543,7 +542,6 @@ class WC_Deposits_Cart_Manager {
 	 */
 	public function add_to_cart_url( $url ) {
 		global $product;
-
 		if ( is_single( $product->get_id() ) ) {
 			return $url;
 		}

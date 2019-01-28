@@ -14,8 +14,12 @@ class WC_Deposits_Product_Manager {
 	 * @return bool
 	 */
 	public static function deposits_enabled( $product_id, $check_variations = true ) {
-		$product = wc_get_product( $product_id );
-
+            
+                $new_production_id = wc_get_not_stated_production_item($product_id); 
+                if($new_production_id !== '') {
+                    return true;
+                }
+                return false;
 		if ( ! $product || $product->is_type( array( 'grouped', 'external' ) ) ) {                    
 			return false;
 		}
@@ -199,7 +203,6 @@ class WC_Deposits_Product_Manager {
 			$amount        = $first_payment->amount;
 			$percentage    = ( 'percentage' === $plan->get_type() );
 		}
-
 		if ( $percentage ) {       
                     $user = wp_get_current_user();
                     $role = ( array ) $user->roles;
@@ -219,7 +222,13 @@ class WC_Deposits_Product_Manager {
                             $product_price = get_post_meta($product->get_id(),'pre_sale_price',true);
                         }
                     }
-                    $amount        = ( $product_price / 100 ) * $amount;
+                   
+                    if(!is_numeric($product_price)) {
+                        throw new Exception('Deposit: no product price!');
+                    }
+                    
+                    $amount = ( $product_price / 100 ) * $amount;
+                    
 		}
 
 		if ( 'display' === $context ) {

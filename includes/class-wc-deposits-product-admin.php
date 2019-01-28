@@ -28,8 +28,8 @@ class WC_Deposits_Plans_Product_Admin {
 		//add_action( 'woocommerce_product_write_panels', array( $this, 'deposit_panel' ) );
                 add_action( 'woocommerce_product_data_panels', array( $this, 'deposit_panel' ) );
                 
-
-		add_action( 'woocommerce_variation_options', array( $this, 'variations_options' ), 10, 3 );
+                // already some options are available
+		//add_action( 'woocommerce_variation_options', array( $this, 'variations_options' ), 10, 3 );
 		add_action( 'woocommerce_product_after_variable_attributes', array( $this, 'variation_deposit_panel'), 10, 3 );
 
 		add_action( 'woocommerce_save_product_variation', array( $this, 'save_product_variation_data' ), 20, 2 );
@@ -47,6 +47,8 @@ class WC_Deposits_Plans_Product_Admin {
 	 * Show the deposits tab
 	 */
 	public function add_tab() {
+            global $product_object;
+            if($product_object->get_type() == 'simple')
 		include( 'views/html-deposits-tab.php' );
 	}
 
@@ -54,8 +56,12 @@ class WC_Deposits_Plans_Product_Admin {
 	 * Show the deposits panel
 	 */
 	public function deposit_panel() {
+            global $product_object;
+            $type = $product_object->get_type();
+            if($type == 'simple') {                
 		wp_enqueue_script( 'woocommerce-deposits-product-admin' );
 		include( 'views/html-deposit-data.php' );
+            }
 	}
 	
 	/**
