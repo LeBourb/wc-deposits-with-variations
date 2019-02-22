@@ -65,12 +65,12 @@ class WC_Deposits_Cart_Manager {
 	 * Show deposits form
 	 */
 	public function deposits_form_output() {                
-            $user = wp_get_current_user(); 
-            $role = ( array ) $user->roles;    
-            if ( true /*WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) && in_array( 'customer-pro', $role )*/ ) {                    
+            //$user = wp_get_current_user(); 
+            //$role = ( array ) $user->roles;    
+            //if ( true /*WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) && in_array( 'customer-pro', $role )*/ ) {                    
                 wp_enqueue_script( 'wc-deposits-frontend' );
                 wc_get_template( 'deposit-form.php', array( 'post' => $GLOBALS['post'] ), 'woocommerce-deposits', WC_DEPOSITS_TEMPLATE_PATH );
-            }
+            //}
 	}
 
 	/**
@@ -242,7 +242,7 @@ class WC_Deposits_Cart_Manager {
 		
 		$item_id = ( $variation_id ) ? $variation_id : $product_id;
 		
-		if ( ! WC_Deposits_Product_Manager::deposits_enabled( $item_id ) ) {
+		if ( ! WC_Deposits_Product_Manager::deposits_enabled( $product_id ) ) {
 			return $cart_item_meta;
 		}
 
@@ -250,7 +250,6 @@ class WC_Deposits_Cart_Manager {
 		$wc_deposit_payment_plan = isset( $_POST['wc_deposit_payment_plan'] ) ? sanitize_text_field( $_POST['wc_deposit_payment_plan'] ) : false;
                 
                 
-
 		if ( 'yes' === $wc_deposit_option || WC_Deposits_Product_Manager::deposits_forced( $item_id ) ) {
 			$cart_item_meta['is_deposit'] = true;
 
@@ -297,6 +296,7 @@ class WC_Deposits_Cart_Manager {
                 // Support multi price: 
                 // change the full amount with Priv or Pre-Sale Price
                 $product_id = null;
+         
                 if ( is_numeric( $cart_item['data'] ) ) {
                     $product = wc_get_product( $cart_item['data'] );
                     $product_id =  $product->get_id();                 
@@ -341,8 +341,9 @@ class WC_Deposits_Cart_Manager {
                 
                 
 		if ( ! empty( $cart_item['is_deposit'] ) ) {
-                        
+                               
 			$deposit_amount = WC_Deposits_Product_Manager::get_deposit_amount( $cart_item['data'], ! empty( $cart_item['payment_plan'] ) ? $cart_item['payment_plan'] : 0 );
+                        
 			if ( false !== $deposit_amount ) {
                             
 				$cart_item['deposit_amount'] = $deposit_amount;
@@ -361,6 +362,8 @@ class WC_Deposits_Cart_Manager {
 						? ( ( $cart_item['data']->get_price() / 100 ) * $total_percent ) 
 						: $cart_item['data']->get_price();
 				} else {
+                         
+                                    
 					$cart_item['full_amount'] = $cart_item['data']->get_price();
                                         $cart_item['deposit_full_amount'] = $deposit_amount * $cart_item['quantity'];
 				}
@@ -396,8 +399,8 @@ class WC_Deposits_Cart_Manager {
 	 * Show the correct item price
 	 */
 	public function display_item_price( $output, $cart_item, $cart_item_key ) {
-		$output = wc_price($cart_item['price']);
-                if ( ! empty( $cart_item['is_deposit'] ) ) {                        
+		$output = wc_price($cart_item['price']);                                
+                if ( ! empty( $cart_item['is_deposit'] ) ) {                                            
 			$_product = $cart_item['data'];
 			if ( 'excl' === WC()->cart->tax_display_cart ) {
                             //$amount = wc_get_price_excluding_tax( $_product, array('qty' => 1,'price' => $cart_item['full_amount']));                             

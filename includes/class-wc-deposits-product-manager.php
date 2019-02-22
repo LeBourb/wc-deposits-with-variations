@@ -163,8 +163,9 @@ class WC_Deposits_Product_Manager {
 		}
                 
                 $variation_id = null;
-                if(is_a($product, 'WC_Product_Variable')) {  
+                if($product->is_type( 'variable' )) {  
                         //first variation
+                    
                         $variations = $product->get_available_variations( );
                         $variation_id = $variations[0]['variation_id'];
                 }
@@ -206,7 +207,7 @@ class WC_Deposits_Product_Manager {
 		if ( $percentage ) {       
                     $user = wp_get_current_user();
                     $role = ( array ) $user->roles;
-                    if(is_a($product, 'WC_Product_Variable')) {  
+                    if($product->is_type( 'variable' )) {  
                         //first variation
                         $variations = $product->get_available_variations( );
                         $product_id = $variations[0]['variation_id'];
@@ -226,7 +227,7 @@ class WC_Deposits_Product_Manager {
                     if(!is_numeric($product_price)) {
                         throw new Exception('Deposit: no product price!');
                     }
-                    
+                                                      
                     $amount = ( $product_price / 100 ) * $amount;
                     
 		}
@@ -236,8 +237,7 @@ class WC_Deposits_Product_Manager {
                         $price            = $tax_display_mode == 'incl' ? wc_get_price_excluding_tax( $product, array('qty' => 1,'price' => $amount)) : wc_get_price_excluding_tax( $product, array('qty'   => 1,'price' => $amount) );			
 		} else {
 			$price            = $amount;
-		}
-                
+		}               
 		return wc_format_decimal( $price );
 	}
 }

@@ -13,13 +13,13 @@ jQuery(function($){
 				$deposits = $this.closest('.wc-deposits-wrapper'),
 				$description = $deposits.find('.wc-deposits-payment-plans, .wc-deposits-payment-description');
 			if ( 'yes' === $this.val() ) {
-				$description.slideDown( 200 );
+                            $description.slideDown( 200 );				
 			} else {
-				$description.slideUp( 200 );
+                            $description.slideUp( 200 );
 			}
 		})
 		.trigger( 'init' );
-	if($('form.variations_form').length > 0) {
+	/*if($('form.variations_form').length > 0) {
             $('form.variations_form')
 		.ready(function(){
                         
@@ -41,7 +41,7 @@ jQuery(function($){
 				$wrapper.slideUp();
 			}
 		});
-        }
+        }*/
         
 
 });

@@ -2,9 +2,9 @@
 <div class="wc-deposits-wrapper <?php echo WC_Deposits_Product_Manager::deposits_forced( $post->ID ) ? 'wc-deposits-forced' : 'wc-deposits-optional'; ?>">
 	
 	<?php if ( ! WC_Deposits_Product_Manager::deposits_forced( $post->ID ) ) : ?>
-		<ul class="wc-deposits-option">
-			<li><input type="radio" name="wc_deposit_option" value="yes" id="wc-option-pay-deposit" /><label for="wc-option-pay-deposit"><?php _e( "分割２回払い（半額ずつ）",'woocommerce-deposits' ); ?></label></li>
+		<ul class="wc-deposits-option">			
 			<li><input type="radio" name="wc_deposit_option" value="no" id="wc-option-pay-full" /><label for="wc-option-pay-full"><?php _e( "一括前払い",'woocommerce-deposits' ); ?></label></li>
+                        <li><input type="radio" name="wc_deposit_option" value="yes" id="wc-option-pay-deposit" /><label for="wc-option-pay-deposit"><?php _e( "分割２回払い（半額ずつ）",'woocommerce-deposits' ); ?></label></li>
 		</ul>
 	<?php endif; ?>
 
@@ -22,7 +22,7 @@
 			<?php } ?>
 		</ul>
 	<?php else : ?>
-		<div class="wc-deposits-payment-description">
+		<div class="wc-deposits-payment-description" style="display:none;">
 			<?php echo WC_Deposits_Product_Manager::get_formatted_deposit_amount( $post->ID ); ?>
                     <p>残金のお支払い時期 : 商品のお届け準備完了時</p>
                     <p>詳しくは、「<a href="<?php echo get_permalink(get_option('woocommerce_shopping_guide_page_id')); ?>">ご利用ガイド ③ お支払いについて</a>」をご参照ください</p>
