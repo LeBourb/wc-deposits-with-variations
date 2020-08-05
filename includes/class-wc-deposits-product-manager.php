@@ -14,13 +14,8 @@ class WC_Deposits_Product_Manager {
 	 * @return bool
 	 */
 	public static function deposits_enabled( $product_id, $check_variations = true ) {
-            
-                $new_production_id = wc_get_not_stated_production_item($product_id); 
-                if($new_production_id !== '') {
-                    return true;
-                }
-                return false;
-		if ( ! $product || $product->is_type( array( 'grouped', 'external' ) ) ) {                    
+                $product = wc_get_product($product_id);
+              	if ( ! $product || $product->is_type( array( 'grouped', 'external' ) ) ) {                    
 			return false;
 		}
 

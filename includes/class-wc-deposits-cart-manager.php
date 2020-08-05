@@ -67,10 +67,10 @@ class WC_Deposits_Cart_Manager {
 	public function deposits_form_output() {                
             //$user = wp_get_current_user(); 
             //$role = ( array ) $user->roles;    
-            //if ( true /*WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) && in_array( 'customer-pro', $role )*/ ) {                    
+            if ( true == WC_Deposits_Product_Manager::deposits_enabled( $GLOBALS['post']->ID ) ) {                    
                 wp_enqueue_script( 'wc-deposits-frontend' );
                 wc_get_template( 'deposit-form.php', array( 'post' => $GLOBALS['post'] ), 'woocommerce-deposits', WC_DEPOSITS_TEMPLATE_PATH );
-            //}
+            }
 	}
 
 	/**

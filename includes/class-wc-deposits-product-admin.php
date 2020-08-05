@@ -48,7 +48,7 @@ class WC_Deposits_Plans_Product_Admin {
 	 */
 	public function add_tab() {
             global $product_object;
-            if($product_object->get_type() == 'simple')
+            //if($product_object->get_type() == 'simple')
 		include( 'views/html-deposits-tab.php' );
 	}
 
@@ -58,10 +58,10 @@ class WC_Deposits_Plans_Product_Admin {
 	public function deposit_panel() {
             global $product_object;
             $type = $product_object->get_type();
-            if($type == 'simple') {                
+            //if($type == 'simple') {                
 		wp_enqueue_script( 'woocommerce-deposits-product-admin' );
 		include( 'views/html-deposit-data.php' );
-            }
+            //}
 	}
 	
 	/**
@@ -101,24 +101,26 @@ class WC_Deposits_Plans_Product_Admin {
 			'_wc_deposit_multiple_cost_by_booking_persons' => 'issetyesno'
 		);
 		foreach ( $meta_to_save as $meta_key => $sanitize ) {
-			$value = ! empty( $_POST[ $meta_key ] ) ? $_POST[ $meta_key ] : '';
-			switch ( $sanitize ) {
-				case 'int' :
-					$value = $value ? ( is_array( $value ) ? array_map( 'absint', $value ) : absint( $value ) ) : '';
-					break;
-				case 'float' :
-					$value = $value ? ( is_array( $value ) ? array_map( 'floatval', $value ) : floatval( $value ) ) : '';
-					break;
-				case 'yesno' :
-					$value = $value == 'yes' ? 'yes' : 'no';
-					break;
-				case 'issetyesno' :
-					$value = $value ? 'yes' : 'no';
-					break;
-				default :
-					$value = is_array( $value ) ? array_map( 'sanitize_text_field', $value ) : sanitize_text_field( $value );
-			}
-			update_post_meta( $post_id, $meta_key, $value );
+                        if(! empty( $_POST[ $meta_key ] )) {
+                            $value = $_POST[ $meta_key ];
+                            switch ( $sanitize ) {
+                                    case 'int' :
+                                            $value = $value ? ( is_array( $value ) ? array_map( 'absint', $value ) : absint( $value ) ) : '';
+                                            break;
+                                    case 'float' :
+                                            $value = $value ? ( is_array( $value ) ? array_map( 'floatval', $value ) : floatval( $value ) ) : '';
+                                            break;
+                                    case 'yesno' :
+                                            $value = $value == 'yes' ? 'yes' : 'no';
+                                            break;
+                                    case 'issetyesno' :
+                                            $value = $value ? 'yes' : 'no';
+                                            break;
+                                    default :
+                                            $value = is_array( $value ) ? array_map( 'sanitize_text_field', $value ) : sanitize_text_field( $value );
+                            }
+                            update_post_meta( $post_id, $meta_key, $value );
+                        }
 		}
 	}
 	
