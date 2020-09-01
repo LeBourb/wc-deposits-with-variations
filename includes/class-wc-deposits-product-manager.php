@@ -116,7 +116,7 @@ class WC_Deposits_Product_Manager {
 	public static function get_formatted_deposit_amount( $product_id ) {
 		$product = wc_get_product( $product_id );
                 //print(self::get_deposit_amount_for_display( $product ));
-		if ( $amount = self::get_deposit_amount_for_display( $product ) ) {
+		//if ( $amount = self::get_deposit_amount_for_display( $product ) ) {
 			$type   = self::get_deposit_type( $product_id );
 
 			if ( $product->is_type( 'booking' ) && 'yes' === get_post_meta( $product_id, '_wc_deposit_multiple_cost_by_booking_persons', true ) ) {
@@ -130,7 +130,7 @@ class WC_Deposits_Product_Manager {
 			} else {
 				return sprintf( __( 'Pay a deposit of %1$s per %2$s', 'woocommerce-deposits' ), '<span class="wc-deposits-amount">' . wc_price($amount) . '</span>', $item );
 			}
-		}
+		//}
 		return '';
 	}
 
@@ -200,7 +200,7 @@ class WC_Deposits_Product_Manager {
 			$percentage    = ( 'percentage' === $plan->get_type() );
 		}
 		if ( $percentage ) {       
-                    $user = wp_get_current_user();
+                    /*$user = wp_get_current_user();
                     $role = ( array ) $user->roles;
                     if($product->is_type( 'variable' )) {  
                         //first variation
@@ -218,7 +218,7 @@ class WC_Deposits_Product_Manager {
                             $product_price = get_post_meta($product->get_id(),'pre_sale_price',true);
                         }
                     }
-                   
+                   */
                     if(!is_numeric($product_price)) {
                         throw new Exception('Deposit: no product price!');
                     }

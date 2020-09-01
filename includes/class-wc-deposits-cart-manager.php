@@ -45,7 +45,9 @@ class WC_Deposits_Cart_Manager {
 		add_filter( 'add_to_cart_text', array( $this, 'add_to_cart_text'), 15 );
 		add_filter( 'woocommerce_product_add_to_cart_text', array( $this, 'add_to_cart_text'), 15 );
 		add_filter( 'woocommerce_add_to_cart_url', array( $this, 'add_to_cart_url' ), 10, 1 );
-		add_filter( 'woocommerce_product_add_to_cart_url', array( $this, 'add_to_cart_url' ), 10, 1 );
+		add_filter( 'woocommerce_product_add_to_cart_url', array( $this, 'add_to_cart_url' ), 10, 1 );    
+                add_filter( 'woocommerce_available_variation', array( $this, 'product_available_variation'), 10 ,3);
+
                //add_filter( 'woocommerce_is_checkout', array( $this, 'is_checkout' ) ,  10 , 1 );
 	}
         
@@ -295,8 +297,11 @@ class WC_Deposits_Cart_Manager {
 	public function add_cart_item( $cart_item ) {
                 // Support multi price: 
                 // change the full amount with Priv or Pre-Sale Price
-                $product_id = null;
-         
+                $product_id = '';
+                $product = null;
+                $regular_price = 0;
+                $pre_sale_price = 0;
+                $priv_sale_price = 0;
                 if ( is_numeric( $cart_item['data'] ) ) {
                     $product = wc_get_product( $cart_item['data'] );
                     $product_id =  $product->get_id();                 
@@ -305,11 +310,22 @@ class WC_Deposits_Cart_Manager {
                 }
                 
                 if(isset($cart_item['variation_id']) && $cart_item['variation_id'] != '') {
-                    $pre_sale_price = get_post_meta($cart_item['variation_id'],'pre_sale_price',true);
-                    $priv_sale_price = get_post_meta($cart_item['variation_id'],'priv_sale_price',true);
+                    if(wc_get_not_stated_production_item($product_id) != '') {
+                        $pre_sale_price = get_post_meta($cart_item['variation_id'],'pre_sale_price',true);
+                        $priv_sale_price = get_post_meta($cart_item['variation_id'],'priv_sale_price',true);                    
+                    } else {
+                        $regular_price = (new WC_Product_Variation( $cart_item['variation_id'] ))->get_price();
+                    }
+                }else if($product && product_id != ''){
+                    if(wc_get_not_stated_production_item($product_id) != '') {
+                        $pre_sale_price = get_post_meta($cart_item['product_id'],'pre_sale_price',true);
+                        $priv_sale_price = get_post_meta($cart_item['product_id'],'priv_sale_price',true);
+                    }else {
+                        $regular_price = $product->get_price();
+                    }
+                    
                 }else {
-                    $pre_sale_price = get_post_meta($cart_item['product_id'],'pre_sale_price',true);
-                    $priv_sale_price = get_post_meta($cart_item['product_id'],'priv_sale_price',true);
+                    throw new Exception('Deposit: no product in cart!');
                 }
                             
                 $user = wp_get_current_user(); 
@@ -326,10 +342,9 @@ class WC_Deposits_Cart_Manager {
                 } 
                 else {
                     // regular product with no deposit!
-                    $product = wc_get_product($product_id);
-                    $cart_item['price'] = $product->get_price();                        
-                    $cart_item['data']->set_price($product->get_price());
-                    $cart_item['data']->set_regular_price($product->get_price());                    
+                    $cart_item['price'] = $regular_price;                        
+                    $cart_item['data']->set_price($regular_price);
+                    $cart_item['data']->set_regular_price($regular_price);
                 }
                                
                 //if(is_a($cart_item['data'] ,'WC_Product_Variation')) {
@@ -342,7 +357,7 @@ class WC_Deposits_Cart_Manager {
                 
 		if ( ! empty( $cart_item['is_deposit'] ) ) {
                                
-			$deposit_amount = WC_Deposits_Product_Manager::get_deposit_amount( $cart_item['data'], ! empty( $cart_item['payment_plan'] ) ? $cart_item['payment_plan'] : 0 );
+			$deposit_amount = WC_Deposits_Product_Manager::get_deposit_amount( $cart_item['data'], ! empty( $cart_item['payment_plan'] ) ? $cart_item['payment_plan'] : 0 , 'display',  $cart_item['price']);
                         
 			if ( false !== $deposit_amount ) {
                             
@@ -564,6 +579,17 @@ class WC_Deposits_Cart_Manager {
 		$url = apply_filters( 'woocoommerce_deposits_add_to_cart_url', get_permalink( $product->get_id() ) );
 		return $url;
 	}
+        
+        public function product_available_variation( $output , $product, $variation) { 
+            $item_id = ( $variation->get_id() ) ? $variation->get_id() : $product->get_id();
+            if ( WC_Deposits_Product_Manager::deposits_enabled( $item_id ) ) {
+                    $output['deposits_enabled'] = 'true';
+            }else {
+                $output['deposits_enabled'] = 'false';
+            }
+            
+            return $output;
+        }
 
 }
 

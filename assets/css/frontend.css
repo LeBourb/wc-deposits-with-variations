@@ -29,6 +29,7 @@
   display: inline-block;
   vertical-align: middle;
   cursor: pointer;
+  white-space: nowrap;
 }
 .wc-deposits-wrapper .wc-deposits-option li:last-child {
   float: right;

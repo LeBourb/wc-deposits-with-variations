@@ -1,4 +1,75 @@
 <!-- class=" -->
+<script>
+    window.addEventListener("DOMContentLoaded", function() {
+        // Select the node that will be observed for mutations
+        var targetNode = jQuery('.wc-deposits-wrapper');
+        
+        var $select = jQuery('form.variations_form.cart select');
+        
+        
+         /**
+            * See if attributes match.
+            * @return {Boolean}
+            */
+         var isMatch = function( variation_attributes, attributes ) {
+                   if(variation_attributes.length !== attributes.length)
+                       return false;
+                   
+                   var match = true;
+                   for ( var attr_name in variation_attributes ) {
+                           if ( attributes.hasOwnProperty( attr_name ) ) {
+                                   var val1 = variation_attributes[ attr_name ];
+                                   var val2 = attributes[ attr_name ];
+                                   if ( val1 !== val2 ) {
+                                           match = false;
+                                   }
+                           }else {
+                               match = false;
+                           }
+                   }
+                   return match;
+           };
+        
+        /**
+            * Find matching variations for attributes.
+            */
+        var findMatchingVariations = function( variations, attributes ) {
+                   var matching = [];
+                   for ( var i = 0; i < variations.length; i++ ) {
+                           var variation = variations[i];
+
+                           if ( isMatch( variation.attributes, attributes ) ) {
+                                   matching.push( variation );
+                           }
+                   }
+                   return matching;
+           };
+
+          
+        var onChange = function(evt) {
+            var variationData = jQuery(document.querySelector('.variations_form.cart')).data( 'product_variations' );
+            var selection = {};
+            $select.each(function(idx, slc) {
+                selection[jQuery(slc).data('attribute_name')] = slc.value;
+            })
+            
+            var variations = findMatchingVariations( variationData, selection );
+            if(variations.length == 1) {
+                 if(variations[0].deposits_enabled == 'true') {
+                     targetNode.show();
+                 }else 
+                     targetNode.hide();
+                
+            }
+        }
+        
+        $select.change(onChange);
+        
+        onChange();
+        
+          
+    });
+</script>
 <div class="wc-deposits-wrapper <?php echo WC_Deposits_Product_Manager::deposits_forced( $post->ID ) ? 'wc-deposits-forced' : 'wc-deposits-optional'; ?>">
 	
 	<?php if ( ! WC_Deposits_Product_Manager::deposits_forced( $post->ID ) ) : ?>
@@ -23,7 +94,7 @@
 		</ul>
 	<?php else : ?>
 		<div class="wc-deposits-payment-description" style="display:none;">
-			<?php echo WC_Deposits_Product_Manager::get_formatted_deposit_amount( $post->ID ); ?>
+			<?php //echo WC_Deposits_Product_Manager::get_formatted_deposit_amount( $post->ID ); ?>
                     <p>残金のお支払い時期 : 商品のお届け準備完了時</p>
                     <p>詳しくは、「<a href="<?php echo get_permalink(get_option('woocommerce_shopping_guide_page_id')); ?>">ご利用ガイド ③ お支払いについて</a>」をご参照ください</p>
 
